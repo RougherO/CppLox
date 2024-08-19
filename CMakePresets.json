@@ -5,6 +5,9 @@
             "name": "default",
             "displayName": "Default",
             "binaryDir": "${sourceDir}/build/",
+            "cacheVariables": {
+                "CMAKE_CXX_STANDARD": "23"
+            },
             "hidden": true
         },
         {
@@ -30,16 +33,30 @@
     ],
     "testPresets": [
         {
+            "name": "default",
+            "output": {
+                "shortProgress": true,
+                "outputOnFailure": true,
+                "verbosity": "extra"
+            }
+        },
+        {
             "name": "debug",
             "configuration": "Debug",
             "configurePreset": "ninja",
-            "displayName": "DebugTest"
+            "displayName": "DebugTest",
+            "inherits": [
+                "default"
+            ]
         },
         {
             "name": "release",
             "configuration": "Release",
             "configurePreset": "ninja",
-            "displayName": "ReleaseTest"
+            "displayName": "ReleaseTest",
+            "inherits": [
+                "default"
+            ]
         }
     ],
     "workflowPresets": [
