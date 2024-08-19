@@ -1,0 +1,111 @@
+{
+    "version": 8,
+    "configurePresets": [
+        {
+            "name": "default",
+            "displayName": "Default",
+            "binaryDir": "${sourceDir}/build/",
+            "hidden": true
+        },
+        {
+            "name": "ninja",
+            "displayName": "Ninja Multi-Config",
+            "inherits": "default",
+            "generator": "Ninja Multi-Config"
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "debug",
+            "configuration": "Debug",
+            "configurePreset": "ninja",
+            "displayName": "Debug"
+        },
+        {
+            "name": "release",
+            "configuration": "Release",
+            "configurePreset": "ninja",
+            "displayName": "Release"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "debug",
+            "configuration": "Debug",
+            "configurePreset": "ninja",
+            "displayName": "DebugTest"
+        },
+        {
+            "name": "release",
+            "configuration": "Release",
+            "configurePreset": "ninja",
+            "displayName": "ReleaseTest"
+        }
+    ],
+    "workflowPresets": [
+        {
+            "name": "debug",
+            "displayName": "Debug",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "ninja"
+                },
+                {
+                    "type": "build",
+                    "name": "debug"
+                }
+            ]
+        },
+        {
+            "name": "release",
+            "displayName": "Release",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "ninja"
+                },
+                {
+                    "type": "build",
+                    "name": "release"
+                }
+            ]
+        },
+        {
+            "name": "debug-test",
+            "displayName": "DebugTest",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "ninja"
+                },
+                {
+                    "type": "build",
+                    "name": "debug"
+                },
+                {
+                    "type": "test",
+                    "name": "debug"
+                }
+            ]
+        },
+        {
+            "name": "release-test",
+            "displayName": "ReleaseTest",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "ninja"
+                },
+                {
+                    "type": "build",
+                    "name": "release"
+                },
+                {
+                    "type": "test",
+                    "name": "release"
+                }
+            ]
+        }
+    ]
+}
