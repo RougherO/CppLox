@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <vector>
-#include "../util/util.hpp"
+#include "util.hpp"
 
 /**
  * Byte Code is in Little Endian format
@@ -14,5 +14,5 @@ public:
 
 private:
     std::vector<uint8_t> m_code {};
-    Util::RLE m_line_info;
+    Util::RLE m_line_info {};
 };

@@ -1,5 +1,5 @@
 #pragma once
-#include "../types/types.hpp"
+#include "types.hpp"
 #include <array>
 #include <limits>
 

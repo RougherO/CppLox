@@ -2,7 +2,7 @@
 #include <ostream>
 #include <string>
 #include <cstddef>
-#include "../vm/vm.hpp"
+#include "vm.hpp"
 
 struct Debugger {
     void set_vm(VM const& vm) noexcept;

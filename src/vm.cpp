@@ -1,13 +1,13 @@
-#include "vm.hpp"
-#include "../instr/instr.hpp"
-#include "../util/util.hpp"
+#include "include/vm.hpp"
+#include "instr.hpp"
+#include "util.hpp"
 
 // #define DEBUG_EXEC_TRACE
 // #define DEBUG_STACK_TRACE
 #ifdef DEBUG_EXEC_TRACE
 #include <iostream>
 #include <string>
-#include "../debugger/debugger.hpp"
+#include "include/debugger.hpp"
 inline static Debugger debugger;
 #endif
 

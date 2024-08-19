@@ -1,9 +1,9 @@
 #pragma once
 #include <cstddef>
-#include "../stack/stack.hpp"
-#include "../types/pool.hpp"
-#include "../types/types.hpp"
-#include "../bytecode/bytecode.hpp"
+#include "stack.hpp"
+#include "util.hpp"
+#include "types.hpp"
+#include "bytecode.hpp"
 // #include <expected>
 
 class VM {
@@ -16,7 +16,7 @@ public:
     ByteCode const* byte_code { nullptr };
 
 private:
-    ConstPool m_const_pool {};
+    Util::ConstPool m_const_pool {};
     size_t m_ip {};
     Stack m_stack {};
 };
