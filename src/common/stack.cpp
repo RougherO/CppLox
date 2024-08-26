@@ -5,7 +5,7 @@ void Stack::push_value(TypeVariant value) noexcept
     m_frames[m_stack_pointer++] = value;
 }
 
-TypeVariant Stack::pop_value() noexcept
+auto Stack::pop_value() noexcept -> TypeVariant
 {
     return m_frames[--m_stack_pointer];
 }

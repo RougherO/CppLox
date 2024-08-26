@@ -5,8 +5,9 @@
 
 struct Stack {
     inline static uint16_t constexpr max_stack_size = std::numeric_limits<uint16_t>::max();
+
     void push_value(TypeVariant value) noexcept;
-    TypeVariant pop_value() noexcept;
+    auto pop_value() noexcept -> TypeVariant;
     auto get_stack() const noexcept -> std::array<TypeVariant, max_stack_size> const&;
     auto curr_stack_ptr() const noexcept -> std::uint16_t;
 

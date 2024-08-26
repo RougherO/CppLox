@@ -14,7 +14,7 @@ protected:
     ByteCode bcode;
 };
 
-TEST_F(ByteCodeTest, ReadLineNumberAtByteOffsetOnSameLine)
+TEST_F(ByteCodeTest, ReadLineNumberAtByteOffset)
 {
     EXPECT_EQ(bcode.read_line_number(0), 1);
     EXPECT_EQ(bcode.read_line_number(1), 1);

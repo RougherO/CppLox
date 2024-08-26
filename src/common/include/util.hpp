@@ -5,11 +5,27 @@
 #include <limits>
 #include <array>
 #include <memory>
+#include <type_traits>
+#include <ranges>
 #include "types.hpp"
 
 namespace Util {
 inline auto to_string = [](LoxType auto elem) {
-    return std::to_string(elem.value);
+    auto val = std::to_string(elem.value);
+
+    if constexpr (std::is_same_v<decltype(elem), Float>) {
+        auto trimmed_zero_view = val
+                               | std::views::reverse
+                               | std::views::drop_while([](char c) { return c == '0'; })
+                               | std::views::reverse;
+        val.assign(trimmed_zero_view.begin(), trimmed_zero_view.end());
+        if (val.back() == '.') {
+            val.push_back('0');
+        }
+        return val;
+    }
+
+    return val;
 };
 
 class RLE {

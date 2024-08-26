@@ -2,7 +2,6 @@
 #include <cstdint>
 #include <variant>
 #include <tuple>
-#include <concepts>
 
 struct Int {
     int32_t value;
@@ -15,11 +14,7 @@ struct Float {
 using TypeTuple = std::tuple<Int, Float>;
 
 template <typename T>
-concept LoxType = std::apply(
-    []<typename... Ts>(Ts...) consteval {
-        return (std::same_as<T, Ts> || ...);
-    },
-    TypeTuple {});
+concept LoxType = requires { std::get<T>(TypeTuple {}); };
 
 template <template <typename...> typename R, typename TupleType>
     requires requires { std::tuple_size_v<TypeTuple>; }

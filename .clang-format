@@ -29,7 +29,7 @@ AlwaysBreakAfterReturnType: None
 BasedOnStyle: WebKit
 BreakBeforeTernaryOperators: true
 BreakInheritanceList: BeforeComma
-# IndentCaseLabels: false
+IndentCaseLabels: true
 IndentWidth: 4
 QualifierAlignment: Right
 SortIncludes: Never

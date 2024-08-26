@@ -29,32 +29,32 @@ void Debugger::disassemble_byte_code(std::ostream& os, bool print_stack) const n
 auto Debugger::disassemble_instruction(std::size_t offset, std::string& disassembled_str) const noexcept -> std::size_t
 {
     switch (m_vm->byte_code->code()[offset]) {
-    case Opcode::RETURN:
-        disassembled_str  = std::format("|   {:06} {:>10} {:>20} {:>20} {:>10}   |\n",
-                                        offset, "RETURN",
-                                        "-", "-",
-                                        m_vm->byte_code->read_line_number(offset));
-        offset           += 1;
-        break;
-    case Opcode::LOAD: {
-        uint8_t first_byte    = m_vm->byte_code->code()[offset + 1];   // Little Endian LSB
-        uint16_t second_byte  = m_vm->byte_code->code()[offset + 2];   // Little Endian
-        uint16_t index        = second_byte << 8 | first_byte;
-        auto value_variant    = m_vm->get_constant(index);
-        auto value            = std::visit(Util::to_string,
-                                           value_variant);
-        disassembled_str      = std::format("|   {:06} {:>10} {:>20} {:>20} {:>10}   |\n",
-                                            offset, "LOAD",
-                                            index, value,
+        case Opcode::RETURN:
+            disassembled_str  = std::format("|   {:06} {:>10} {:>20} {:>20} {:>10}   |\n",
+                                            offset, "RETURN",
+                                            "-", "-",
                                             m_vm->byte_code->read_line_number(offset));
-        offset               += 3;
-    } break;
-    default:
-        disassembled_str  = std::format("|   {:06} {:>10} {:>20} {:>20} {:>10}   |\n",
-                                        offset, "UNKNOWN",
-                                        "-", "-",
-                                        m_vm->byte_code->read_line_number(offset));
-        offset           += 1;
+            offset           += 1;
+            break;
+        case Opcode::LOAD: {
+            uint8_t first_byte    = m_vm->byte_code->code()[offset + 1];   // Little Endian LSB
+            uint16_t second_byte  = m_vm->byte_code->code()[offset + 2];   // Little Endian
+            uint16_t index        = second_byte << 8 | first_byte;
+            auto value_variant    = m_vm->get_constant(index);
+            auto value            = std::visit(Util::to_string,
+                                               value_variant);
+            disassembled_str      = std::format("|   {:06} {:>10} {:>20} {:>20} {:>10}   |\n",
+                                                offset, "LOAD",
+                                                index, value,
+                                                m_vm->byte_code->read_line_number(offset));
+            offset               += 3;
+        } break;
+        default:
+            disassembled_str  = std::format("|   {:06} {:>10} {:>20} {:>20} {:>10}   |\n",
+                                            offset, "UNKNOWN",
+                                            "-", "-",
+                                            m_vm->byte_code->read_line_number(offset));
+            offset           += 1;
     }
 
     return offset;
