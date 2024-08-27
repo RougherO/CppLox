@@ -8,7 +8,7 @@
 class Lexer {
 public:
     Lexer(std::string_view source);
-    auto scan() -> std::vector<Token>;
+    auto scan() && -> std::vector<Token>&&;
     auto scan_token() -> Token;
 
 private:

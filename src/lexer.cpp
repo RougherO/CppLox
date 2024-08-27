@@ -11,12 +11,11 @@ Lexer::Lexer(std::string_view source)
 {
 }
 
-auto Lexer::scan() -> std::vector<Token>
+auto Lexer::scan() && -> std::vector<Token>&&
 {
     for (m_start = m_curr = m_source.cbegin(); !m_is_end();) {
-        m_tokens.emplace_back(std::move(scan_token()));
+        m_tokens.emplace_back(scan_token());
     }
-    m_tokens.emplace_back(TokenType::EOF, "", m_line);
     return std::move(m_tokens);
 }
 
@@ -25,6 +24,10 @@ auto Lexer::scan_token() -> Token
     m_skip_whitespace();
 
     m_start = m_curr;
+
+    if (m_is_end()) {
+        return m_create_token(TokenType::EOF);
+    }
 
     char c = m_advance();
 
@@ -58,7 +61,7 @@ auto Lexer::scan_token() -> Token
                            ? m_create_token(GREATER_EQUAL)
                            : m_create_token(GREATER);
         case '"': return m_create_strtok();
-        default: return m_create_token(ERROR);
+        default: return m_create_errtok("Unexpected character token");
     }
     std::unreachable();
 }
@@ -83,8 +86,7 @@ auto Lexer::m_create_errtok(std::string_view err_msg) const noexcept -> Token
 
 auto Lexer::m_create_strtok() -> Token
 {
-    for (char c {}; (c = m_advance()) != '"';) {
-        if (m_is_end()) return m_create_errtok("Unterminated string");
+    for (char c {}; !m_is_end() && (c = m_peek()) != '"';) {
         switch (c) {
             case '\n':
                 m_line++;
@@ -95,8 +97,14 @@ auto Lexer::m_create_strtok() -> Token
                 }
                 break;
         }
+        m_advance();
     }
 
+    if (m_is_end()) {
+        return m_create_errtok("Unterminated string");
+    }
+
+    m_advance();   // consume '"' character
     return m_create_token(TokenType::STRING);
 }
 
@@ -128,7 +136,7 @@ auto Lexer::m_create_numtok() noexcept -> Token
 
 auto Lexer::m_create_idtok() noexcept -> Token
 {
-    while (std::isalnum(m_peek()) || m_peek() == '_') m_advance();
+    while (!m_is_end() && (std::isalnum(m_peek()) || m_peek() == '_')) m_advance();
 
     switch (*m_start) {
         using enum TokenType;
@@ -199,7 +207,7 @@ auto Lexer::m_match_kwd(std::size_t offset, std::string_view expected, TokenType
 
 void Lexer::m_skip_whitespace() noexcept
 {
-    while (true) {
+    while (!m_is_end()) {
         char c = m_peek();
         switch (c) {
             case '\n':

@@ -8,9 +8,11 @@ protected:
     void SetUp() override
     {
         lexer_with_int    = new Lexer(int_s);
-        lexer_with_float  = new Lexer(flt_s);
-        lexer_with_string = new Lexer(str_s);
-        lexer_with_kwd    = new Lexer(kwd_s);
+        lexer_with_float  = new Lexer(float_s);
+        lexer_with_string = new Lexer(string_s);
+        lexer_with_kwd    = new Lexer(keyword_s);
+
+        lexer_with_single_quote_s = new Lexer(single_quote_s);
     }
 
     virtual void TearDown() override
@@ -24,11 +26,14 @@ protected:
     std::string_view int_s = "1 2 3 4 \n"
                              "5 6 7 \n"
                              "8";
-    std::string_view flt_s = "1.0 2.0 3.0\n"
+    
+    std::string_view float_s = "1.0 2.0 3.0\n"
                              "1.333 4.56 8.89";
-    std::string_view str_s = "\"Sample string\" \"Sample string part two\" \n"
+    
+    std::string_view string_s = "\"Sample string\" \"Sample string part two\" \n"
                              "\"Sample string part 3\" \"Non terminating string test";
-    std::string_view kwd_s = " and "
+    
+    std::string_view keyword_s = " and "
                              " class "
                              " else "
                              " false "
@@ -44,6 +49,8 @@ protected:
                              " true "
                              " while "
                              " keyword ";
+
+    std::string_view single_quote_s = "\"";
     Lexer* lexer_with_float;
     Lexer* lexer_with_int;
     Lexer* lexer_with_string;
@@ -60,7 +67,7 @@ auto operator<<(std::ostream& os, Token const& t) -> std::ostream&
     return os << std::format("Token {{type: {}, word: '{}', line: {}}}", (int)t.type, t.word, t.line);
 }
 
-TEST_F(LexerTest, LexerIntLexTest)
+TEST_F(LexerTest, IntLexTest)
 {
     using enum TokenType;
     Token result;
@@ -87,7 +94,7 @@ TEST_F(LexerTest, LexerIntLexTest)
     EXPECT_EQ(lexer_with_int->scan_token(), result);
 }
 
-TEST_F(LexerTest, LexerFloatLexTest)
+TEST_F(LexerTest, FloatLexTest)
 {
     using enum TokenType;
     Token result;
@@ -109,7 +116,7 @@ TEST_F(LexerTest, LexerFloatLexTest)
     EXPECT_EQ(lexer_with_float->scan_token(), result);
 }
 
-TEST_F(LexerTest, LexerStringLexTest)
+TEST_F(LexerTest, StringLexTest)
 {
     using enum TokenType;
     Token result;
@@ -128,7 +135,7 @@ TEST_F(LexerTest, LexerStringLexTest)
     EXPECT_EQ(lexer_with_string->scan_token(), result);
 }
 
-TEST_F(LexerTest, LexerKeywordLexTest)
+TEST_F(LexerTest, KeywordLexTest)
 {
     using enum TokenType;
     Token result;
@@ -182,4 +189,15 @@ TEST_F(LexerTest, LexerKeywordLexTest)
     result.type = IDENTIFIER;
     result.word = "keyword";
     EXPECT_EQ(lexer_with_kwd->scan_token(), result);
+}
+
+TEST_F(LexerTest, SingleQuoteString)
+{
+    using enum TokenType;
+    Token result;
+
+    result.type = ERROR;
+    result.line = 1;
+    result.word = "Unterminated string";
+    EXPECT_EQ(lexer_with_single_quote_s->scan_token(), result);
 }
