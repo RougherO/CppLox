@@ -4,21 +4,23 @@
 #include <iterator>
 #include <algorithm>
 
-Lexer::Lexer(std::string const& source)
+Lexer::Lexer(std::string_view source)
     : m_source { source }
+    , m_start { m_source.begin() }
+    , m_curr { m_source.begin() }
 {
 }
 
 auto Lexer::scan() -> std::vector<Token>
 {
-    std::vector<Token> tokens {};
-    for (m_start = m_curr = m_source.cbegin(); m_curr != m_source.cend();) {
+    for (m_start = m_curr = m_source.cbegin(); !m_is_end();) {
+        m_tokens.emplace_back(std::move(scan_token()));
     }
-    tokens.emplace_back(TokenType::EOF, "", m_line);
-    return tokens;
+    m_tokens.emplace_back(TokenType::EOF, "", m_line);
+    return std::move(m_tokens);
 }
 
-auto Lexer::m_scan_token() -> Token
+auto Lexer::scan_token() -> Token
 {
     m_skip_whitespace();
 
@@ -79,14 +81,36 @@ auto Lexer::m_create_errtok(std::string_view err_msg) const noexcept -> Token
     };
 }
 
-auto Lexer::m_create_strtok() noexcept -> Token
+auto Lexer::m_create_strtok() -> Token
 {
     for (char c {}; (c = m_advance()) != '"';) {
         if (m_is_end()) return m_create_errtok("Unterminated string");
-        if (c == '\n') m_line++;
+        switch (c) {
+            case '\n':
+                m_line++;
+                break;
+            case '$':
+                if (m_peek() == '{') {
+                    m_create_intrpltok();
+                }
+                break;
+        }
     }
 
     return m_create_token(TokenType::STRING);
+}
+
+void Lexer::m_create_intrpltok()
+{
+    while (!m_is_end() && m_advance() != '}') {
+        m_tokens.emplace_back(std::move(scan_token()));
+    }
+
+    if (m_is_end()) {
+        m_tokens.emplace_back(std::move(m_create_errtok("Expected closing braces '}' for interpolation")));
+    }
+
+    m_tokens.emplace_back(std::move(m_create_token(TokenType::RIGHT_BRACE)));
 }
 
 auto Lexer::m_create_numtok() noexcept -> Token
@@ -108,33 +132,33 @@ auto Lexer::m_create_idtok() noexcept -> Token
 
     switch (*m_start) {
         using enum TokenType;
-        case 'a': return m_match_kwd("nd", AND);
-        case 'c': return m_match_kwd("lass", CLASS);
-        case 'e': return m_match_kwd("lse", ELSE);
+        case 'a': return m_match_kwd(1, "nd", AND);
+        case 'c': return m_match_kwd(1, "lass", CLASS);
+        case 'e': return m_match_kwd(1, "lse", ELSE);
         case 'f':
             if (m_curr - m_start > 1) {
                 switch (*std::next(m_start, 1)) {
-                    case 'a': return m_match_kwd("lse", FALSE);
-                    case 'o': return m_match_kwd("r", FOR);
-                    case 'u': return m_match_kwd("n", FUN);
+                    case 'a': return m_match_kwd(2, "lse", FALSE);
+                    case 'o': return m_match_kwd(2, "r", FOR);
+                    case 'u': return m_match_kwd(2, "n", FUN);
                 }
             }
             break;
-        case 'i': return m_match_kwd("f", IF);
-        case 'n': return m_match_kwd("il", NIL);
-        case 'o': return m_match_kwd("r", OR);
-        case 'p': return m_match_kwd("rint", PRINT);
-        case 'r': return m_match_kwd("eturn", RETURN);
-        case 's': return m_match_kwd("uper", SUPER);
+        case 'i': return m_match_kwd(1, "f", IF);
+        case 'l': return m_match_kwd(1, "et", LET);
+        case 'n': return m_match_kwd(1, "il", NIL);
+        case 'o': return m_match_kwd(1, "r", OR);
+        case 'p': return m_match_kwd(1, "rint", PRINT);
+        case 'r': return m_match_kwd(1, "eturn", RETURN);
+        case 's': return m_match_kwd(1, "uper", SUPER);
         case 't':
             if (m_curr - m_start > 1) {
                 switch (*std::next(m_start, 1)) {
-                    case 'h': return m_match_kwd("is", THIS);
-                    case 'r': return m_match_kwd("ue", TRUE);
+                    case 'h': return m_match_kwd(2, "is", THIS);
+                    case 'r': return m_match_kwd(2, "ue", TRUE);
                 }
             }
-        case 'l': return m_match_kwd("et", LET);
-        case 'w': return m_match_kwd("hile", WHILE);
+        case 'w': return m_match_kwd(1, "hile", WHILE);
     }
 
     return m_create_token(TokenType::IDENTIFIER);
@@ -166,9 +190,9 @@ auto Lexer::m_match(char expected) noexcept -> bool
     return true;
 }
 
-auto Lexer::m_match_kwd(std::string_view expected, TokenType type) noexcept -> Token
+auto Lexer::m_match_kwd(std::size_t offset, std::string_view expected, TokenType type) noexcept -> Token
 {
-    return std::ranges::equal(m_start, m_curr, expected.begin(), expected.end())
+    return std::ranges::equal(std::next(m_start, offset), m_curr, expected.begin(), expected.end())
              ? m_create_token(type)
              : m_create_token(TokenType::IDENTIFIER);
 }
