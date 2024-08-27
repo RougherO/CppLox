@@ -92,8 +92,10 @@ auto Lexer::m_create_strtok() -> Token
                 m_line++;
                 break;
             case '$':
-                if (m_peek() == '{') {
+                if (m_peek_next() == '{') {
                     m_create_intrpltok();
+                    m_start = m_curr;   // after '}' collect rest of the characters in `string` token
+                    continue;           // do not advance continue from current character
                 }
                 break;
         }
@@ -110,15 +112,20 @@ auto Lexer::m_create_strtok() -> Token
 
 void Lexer::m_create_intrpltok()
 {
-    while (!m_is_end() && m_advance() != '}') {
+    m_tokens.emplace_back(std::move(m_create_token(TokenType::INTRPL)));
+    m_advance();   // skip '$'
+    m_advance();   // skip `{`
+
+    while (!m_is_end() && m_peek() != '}') {
         m_tokens.emplace_back(std::move(scan_token()));
     }
 
     if (m_is_end()) {
-        m_tokens.emplace_back(std::move(m_create_errtok("Expected closing braces '}' for interpolation")));
+        m_tokens.emplace_back(std::move(m_create_errtok("Expected closing braces '}'")));
+        return;
     }
 
-    m_tokens.emplace_back(std::move(m_create_token(TokenType::RIGHT_BRACE)));
+    m_tokens.emplace_back(std::move(scan_token()));   // add '}'
 }
 
 auto Lexer::m_create_numtok() noexcept -> Token

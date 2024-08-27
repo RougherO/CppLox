@@ -14,6 +14,7 @@ enum class TokenType {
     SEMICOLON,
     SLASH,
     STAR,
+    INTRPL,   // string interpolation "My name is ${name}"
 
     BANG,
     BANG_EQUAL,
