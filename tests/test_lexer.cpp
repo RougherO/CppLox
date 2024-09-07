@@ -306,7 +306,7 @@ TEST_F(LexerTest, NestedStringInterPolationTest)
     result.type = STRING;
     result.word = "\"";
     EXPECT_EQ(tokens.at(11), result);
-    result.type = EOF;
+    result.type = END;
     result.word = "";
     EXPECT_EQ(tokens.at(12), result);
 }

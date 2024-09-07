@@ -49,8 +49,7 @@ enum class TokenType {
     WHILE,
 
     ERROR,
-#undef EOF   // EOF is #defined somewhere causing problems with Token definition
-    EOF,
+    END,
 };
 
 struct Token {
