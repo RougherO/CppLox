@@ -1,14 +1,22 @@
 #pragma once
 #include <string_view>
 #include <vector>
-#include <string>
 #include <cstddef>
 #include "tokens.hpp"
 
 class Lexer {
 public:
     Lexer(std::string_view source);
-    auto scan() && -> std::vector<Token>&&;
+    template <typename Self>
+    auto&& scan(this Self&& self)
+    {
+        for (self.m_start = self.m_curr = self.m_source.cbegin(); !self.m_is_end();) {
+            self.m_tokens.emplace_back(self.scan_token());
+        }
+        return std::forward<Self>(self).get_tokens();   // returns lvalue in lvalue context and rvalue in rvalue context
+    }
+    auto get_tokens() const& noexcept -> std::vector<Token> const&;
+    auto get_tokens() && noexcept -> std::vector<Token>&&;
     auto scan_token() -> Token;
 
 private:

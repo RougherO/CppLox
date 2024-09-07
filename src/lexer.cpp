@@ -11,11 +11,13 @@ Lexer::Lexer(std::string_view source)
 {
 }
 
-auto Lexer::scan() && -> std::vector<Token>&&
+auto Lexer::get_tokens() const& noexcept -> std::vector<Token> const&
 {
-    for (m_start = m_curr = m_source.cbegin(); !m_is_end();) {
-        m_tokens.emplace_back(scan_token());
-    }
+    return m_tokens;
+}
+
+auto Lexer::get_tokens() && noexcept -> std::vector<Token>&&
+{
     return std::move(m_tokens);
 }
 
@@ -26,7 +28,7 @@ auto Lexer::scan_token() -> Token
     m_start = m_curr;
 
     if (m_is_end()) {
-        return m_create_token(TokenType::EOF);
+        return m_create_token(TokenType::END);
     }
 
     char c = m_advance();
