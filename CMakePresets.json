@@ -5,29 +5,20 @@
             "name": "default",
             "displayName": "Default",
             "binaryDir": "${sourceDir}/build/",
-            "cacheVariables": {
-                "CMAKE_CXX_STANDARD": "23"
-            },
-            "hidden": true
-        },
-        {
-            "name": "ninja",
-            "displayName": "Ninja Multi-Config",
-            "inherits": "default",
-            "generator": "Ninja Multi-Config"
+            "cacheVariables": {}
         }
     ],
     "buildPresets": [
         {
             "name": "debug",
             "configuration": "Debug",
-            "configurePreset": "ninja",
+            "configurePreset": "default",
             "displayName": "Debug"
         },
         {
             "name": "release",
             "configuration": "Release",
-            "configurePreset": "ninja",
+            "configurePreset": "default",
             "displayName": "Release"
         }
     ],
@@ -43,7 +34,7 @@
         {
             "name": "debug",
             "configuration": "Debug",
-            "configurePreset": "ninja",
+            "configurePreset": "default",
             "displayName": "Debug",
             "inherits": [
                 "default"
@@ -52,7 +43,7 @@
         {
             "name": "release",
             "configuration": "Release",
-            "configurePreset": "ninja",
+            "configurePreset": "default",
             "displayName": "Release",
             "inherits": [
                 "default"
@@ -66,7 +57,7 @@
             "steps": [
                 {
                     "type": "configure",
-                    "name": "ninja"
+                    "name": "default"
                 },
                 {
                     "type": "build",
@@ -80,7 +71,7 @@
             "steps": [
                 {
                     "type": "configure",
-                    "name": "ninja"
+                    "name": "default"
                 },
                 {
                     "type": "build",
@@ -94,7 +85,7 @@
             "steps": [
                 {
                     "type": "configure",
-                    "name": "ninja"
+                    "name": "default"
                 },
                 {
                     "type": "build",
@@ -112,7 +103,7 @@
             "steps": [
                 {
                     "type": "configure",
-                    "name": "ninja"
+                    "name": "default"
                 },
                 {
                     "type": "build",

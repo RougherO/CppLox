@@ -1,17 +1,25 @@
-Checks: clang-analyzer-*, clang-*,
-        cppcoreguidelines-*,
-        performance-*,
-        bugprone-*,
-        modernize-*, 
-        concurrency-*, 
-        portability-*,
-        readability-*,
-        -readability-identifier-length, -readability-magic-numbers, -readability-implicit-bool-conversion,
-        # boost-*
-        # -cppcoreguidelines-pro-bounds-pointer-arithmetic, -cppcoreguidelines-special-member-functions, -cppcoreguidelines-avoid-magic-numbers, -cppcoreguidelines-pro-bounds-constant-array-index
-
+Checks: 
+    clang-analyzer-*,
+    clang-*,
+    cppcoreguidelines-*,
+    performance-*,
+    bugprone-*,
+    modernize-*,
+    portability-*,
+    readability-*,
+    -bugprone-narrowing-conversions, -bugprone-easily-swappable-parameters, -bugprone-reserved-identifier,
+    -bugprone-standalone-empty, -bugprone-stringview-nullptr, -bugprone-multiple-statement-macro,
+    -modernize-use-trailing-return-type, -modernize-use-nullptr, -modernize-deprecated-ios-base-aliases, 
+    -modernize-replace-auto-ptr, -modernize-type-traits, -modernize-use-std-print, 
+    -modernize-use-std-numbers, -modernize-macro-to-enum,
+    -readability-identifier-length, -readability-magic-numbers, -readability-implicit-bool-conversion,
+    -readability-uppercase-literal-suffix,
+    -cppcoreguidelines-non-private-member-variables-in-classes, -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+    -cppcoreguidelines-special-member-functions, -cppcoreguidelines-avoid-magic-numbers, -cppcoreguidelines-pro-bounds-constant-array-index, 
+    -cppcoreguidelines-narrowing-conversions, -cppcoreguidelines-pro-bounds-array-to-pointer-decay, -cppcoreguidelines-macro-to-enum,
+    -cppcoreguidelines-avoid-c-arrays
+    
+    # boost-*,
 WarningsAsErrors: ''
-HeaderFilterRegex: ''
-AnalyzeTemporaryDtors: false
+HeaderFilterRegex: '.*.hpp$'
 FormatStyle: "file"
-# CheckOptions:
