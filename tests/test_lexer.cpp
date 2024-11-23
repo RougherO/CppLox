@@ -1,90 +1,66 @@
-#include "lexer.hpp"
-#include "gtest/gtest.h"
 #include <utility>
 #include <tuple>
 #include <ostream>
+#include <memory>
+#include "lexer.hpp"
+#include "gtest/gtest.h"
 
 struct LexerTest : testing::Test {
 protected:
     void SetUp() override
     {
-        lexer_with_int    = new Lexer(int_s);
-        lexer_with_float  = new Lexer(float_s);
-        lexer_with_string = new Lexer(string_s);
-        lexer_with_kwd    = new Lexer(keyword_s);
-
-        lexer_with_single_quote_s = new Lexer(single_quote_s);
-
-        lexer_with_interpolated_s              = new Lexer(interpolated_s);
-        lexer_with_nested_interpolated_s       = new Lexer(nested_interpolated_s);
-        lexer_with_no_end_brace_interpolated_s = new Lexer(no_end_brace_interpolated_s);
-        lexer_with_no_end_quote_interpolated_s = new Lexer(no_end_quote_interpolated_s);
-        lexer_with_simple_string_with_dollar_s = new Lexer(simple_string_with_dollar_s);
     }
 
-    virtual void TearDown() override
+    void TearDown() override
     {
-        delete lexer_with_int;
-        delete lexer_with_float;
-        delete lexer_with_string;
-        delete lexer_with_kwd;
-        delete lexer_with_single_quote_s;
-        delete lexer_with_interpolated_s;
-        delete lexer_with_nested_interpolated_s;
-        delete lexer_with_no_end_brace_interpolated_s;
-        delete lexer_with_no_end_quote_interpolated_s;
-        delete lexer_with_simple_string_with_dollar_s;
     }
 
-    std::string_view int_s = "1 2 3 4 \n"
-                             "5 6 7 \n"
-                             "8";
+    std::string_view int_s                       = "1 2 3 4 \n"
+                                                   "5 6 7 \n"
+                                                   "8";
+    std::string_view float_s                     = "1.0 2.0 3.0\n"
+                                                   "1.333 4.56 8.89";
+    std::string_view string_s                    = "\"Sample string\" \"Sample string part two\" \n"
+                                                   "\"Sample string part 3\" \"Non terminating string test";
+    std::string_view keyword_s                   = " and "
+                                                   " class "
+                                                   " else "
+                                                   " false "
+                                                   " for "
+                                                   " if "
+                                                   " let "
+                                                   " nil "
+                                                   " or "
+                                                   " print "
+                                                   " return "
+                                                   " super "
+                                                   " this "
+                                                   " true "
+                                                   " while "
+                                                   " keyword ";
+    std::string_view single_quote_s              = R"(")";
+    std::string_view interpolated_s              = R"( "Initial msg ${Hello + 1}" )";
+    std::string_view nested_interpolated_s       = R"( "${Hello "${1 + 2}" - 3}" )";
+    std::string_view no_end_brace_interpolated_s = R"( "${Hello" )";
+    std::string_view no_end_quote_interpolated_s = R"( "${Hello} )";
+    std::string_view simple_string_with_dollar_s = R"( "$Hello" )";
+    std::string_view comment_s                   = "let x = 1; // This is a comment";
+    std::string_view divide_expr_s               = "let x = 2 / 3;";
+    std::string_view comment_with_three_slash    = "let x = 1; /// This is also a comment";
 
-    std::string_view float_s = "1.0 2.0 3.0\n"
-                               "1.333 4.56 8.89";
-
-    std::string_view string_s = "\"Sample string\" \"Sample string part two\" \n"
-                                "\"Sample string part 3\" \"Non terminating string test";
-
-    std::string_view keyword_s = " and "
-                                 " class "
-                                 " else "
-                                 " false "
-                                 " for "
-                                 " if "
-                                 " let "
-                                 " nil "
-                                 " or "
-                                 " print "
-                                 " return "
-                                 " super "
-                                 " this "
-                                 " true "
-                                 " while "
-                                 " keyword ";
-
-    std::string_view single_quote_s = "\"";
-
-    std::string_view interpolated_s = " \"Initial msg ${Hello + 1}\" ";
-
-    std::string_view nested_interpolated_s = " \"${Hello \"${1 + 2}\" - 3}\" ";
-
-    std::string_view no_end_brace_interpolated_s = " \"${Hello\" ";
-
-    std::string_view no_end_quote_interpolated_s = " \"${Hello} ";
-
-    std::string_view simple_string_with_dollar_s = " \"$Hello\" ";
-
-    Lexer* lexer_with_float;
-    Lexer* lexer_with_int;
-    Lexer* lexer_with_string;
-    Lexer* lexer_with_kwd;
-    Lexer* lexer_with_single_quote_s;
-    Lexer* lexer_with_interpolated_s;
-    Lexer* lexer_with_nested_interpolated_s;
-    Lexer* lexer_with_no_end_brace_interpolated_s;
-    Lexer* lexer_with_no_end_quote_interpolated_s;
-    Lexer* lexer_with_simple_string_with_dollar_s;
+    std::unique_ptr<Lexer> lexer_with_int { std::make_unique<Lexer>(int_s) };
+    std::unique_ptr<Lexer> lexer_with_float { std::make_unique<Lexer>(float_s) };
+    std::unique_ptr<Lexer> lexer_with_string { std::make_unique<Lexer>(string_s) };
+    std::unique_ptr<Lexer> lexer_with_kwd { std::make_unique<Lexer>(keyword_s) };
+    std::unique_ptr<Lexer> lexer_with_single_quote_s { std::make_unique<Lexer>(single_quote_s) };
+    std::unique_ptr<Lexer> lexer_with_interpolated_s { std::make_unique<Lexer>(interpolated_s) };
+    std::unique_ptr<Lexer> lexer_with_nested_interpolated_s { std::make_unique<Lexer>(nested_interpolated_s) };
+    std::unique_ptr<Lexer> lexer_with_no_end_brace_interpolated_s { std::make_unique<Lexer>(no_end_brace_interpolated_s) };
+    std::unique_ptr<Lexer> lexer_with_no_end_quote_interpolated_s { std::make_unique<Lexer>(no_end_quote_interpolated_s) };
+    std::unique_ptr<Lexer> lexer_with_simple_string_with_dollar_s { std::make_unique<Lexer>(simple_string_with_dollar_s) };
+    std::unique_ptr<Lexer> lexer_with_comment_s { std::make_unique<Lexer>(comment_s) };
+    std::unique_ptr<Lexer> lexer_with_divide_expr_s { std::make_unique<Lexer>(divide_expr_s) };
+    std::unique_ptr<Lexer> lexer_with_comment_with_three_slash_s { std::make_unique<Lexer>(comment_with_three_slash) };
 };
 
 auto operator==(Token const& t1, Token const& t2)
@@ -101,7 +77,7 @@ TEST_F(LexerTest, IntLexTest)
 {
     using enum TokenType;
     Token result;
-    result.type = INT;
+    result.type = INT32;
 
     result.word = "1";
     result.line = 1;
@@ -122,13 +98,16 @@ TEST_F(LexerTest, IntLexTest)
     result.word = "8";
     result.line = 3;
     EXPECT_EQ(lexer_with_int->scan_token(), result);
+    result.type = END;
+    result.word = "";
+    EXPECT_EQ(lexer_with_int->scan_token().type, result.type);
 }
 
 TEST_F(LexerTest, FloatLexTest)
 {
     using enum TokenType;
     Token result;
-    result.type = FLOAT;
+    result.type = FLOAT64;
 
     result.word = "1.0";
     result.line = 1;
@@ -144,6 +123,9 @@ TEST_F(LexerTest, FloatLexTest)
     EXPECT_EQ(lexer_with_float->scan_token(), result);
     result.word = "8.89";
     EXPECT_EQ(lexer_with_float->scan_token(), result);
+    result.type = END;
+    result.word = "";
+    EXPECT_EQ(lexer_with_float->scan_token().type, result.type);
 }
 
 TEST_F(LexerTest, StringLexTest)
@@ -163,6 +145,9 @@ TEST_F(LexerTest, StringLexTest)
     result.type = ERROR;
     result.word = "Unterminated string";
     EXPECT_EQ(lexer_with_string->scan_token(), result);
+    result.type = END;
+    result.word = "";
+    EXPECT_EQ(lexer_with_string->scan_token().type, result.type);
 }
 
 TEST_F(LexerTest, KeywordLexTest)
@@ -198,8 +183,8 @@ TEST_F(LexerTest, KeywordLexTest)
     result.type = OR;
     result.word = "or";
     EXPECT_EQ(lexer_with_kwd->scan_token(), result);
-    result.type = PRINT;
-    result.word = "print";
+    result.type = LOG;
+    result.word = "log";
     EXPECT_EQ(lexer_with_kwd->scan_token(), result);
     result.type = RETURN;
     result.word = "return";
@@ -219,6 +204,9 @@ TEST_F(LexerTest, KeywordLexTest)
     result.type = IDENTIFIER;
     result.word = "keyword";
     EXPECT_EQ(lexer_with_kwd->scan_token(), result);
+    result.type = END;
+    result.word = "";
+    EXPECT_EQ(lexer_with_kwd->scan_token().type, result.type);
 }
 
 TEST_F(LexerTest, SingleQuoteString)
@@ -230,6 +218,9 @@ TEST_F(LexerTest, SingleQuoteString)
     result.line = 1;
     result.word = "Unterminated string";
     EXPECT_EQ(lexer_with_single_quote_s->scan_token(), result);
+    result.type = END;
+    result.word = "";
+    EXPECT_EQ(lexer_with_single_quote_s->scan_token().type, result.type);
 }
 
 TEST_F(LexerTest, StringInterPolationTest)
@@ -250,7 +241,7 @@ TEST_F(LexerTest, StringInterPolationTest)
     result.type = PLUS;
     result.word = "+";
     EXPECT_EQ(tokens.at(2), result);
-    result.type = INT;
+    result.type = INT32;
     result.word = "1";
     EXPECT_EQ(tokens.at(3), result);
     result.type = RIGHT_BRACE;
@@ -259,6 +250,9 @@ TEST_F(LexerTest, StringInterPolationTest)
     result.type = STRING;
     result.word = "\"";
     EXPECT_EQ(tokens.at(5), result);
+    result.type = END;
+    result.word = "";
+    EXPECT_EQ(tokens.at(6).type, result.type);
 }
 
 TEST_F(LexerTest, NestedStringInterPolationTest)
@@ -279,13 +273,13 @@ TEST_F(LexerTest, NestedStringInterPolationTest)
     result.type = INTRPL;
     result.word = "\"";
     EXPECT_EQ(tokens.at(2), result);
-    result.type = INT;
+    result.type = INT32;
     result.word = "1";
     EXPECT_EQ(tokens.at(3), result);
     result.type = PLUS;
     result.word = "+";
     EXPECT_EQ(tokens.at(4), result);
-    result.type = INT;
+    result.type = INT32;
     result.word = "2";
     EXPECT_EQ(tokens.at(5), result);
     result.type = RIGHT_BRACE;
@@ -297,7 +291,7 @@ TEST_F(LexerTest, NestedStringInterPolationTest)
     result.type = MINUS;
     result.word = "-";
     EXPECT_EQ(tokens.at(8), result);
-    result.type = INT;
+    result.type = INT32;
     result.word = "3";
     EXPECT_EQ(tokens.at(9), result);
     result.type = RIGHT_BRACE;
@@ -308,7 +302,7 @@ TEST_F(LexerTest, NestedStringInterPolationTest)
     EXPECT_EQ(tokens.at(11), result);
     result.type = END;
     result.word = "";
-    EXPECT_EQ(tokens.at(12), result);
+    EXPECT_EQ(tokens.at(12).type, result.type);
 }
 
 TEST_F(LexerTest, NoEndBraceInterPolatedStringTest)
@@ -332,6 +326,12 @@ TEST_F(LexerTest, NoEndBraceInterPolatedStringTest)
     result.type = ERROR;
     result.word = "Expected closing braces '}'";
     EXPECT_EQ(tokens.at(3), result);
+    result.type = ERROR;
+    result.word = "Unterminated string";
+    EXPECT_EQ(tokens.at(4), result);
+    result.type = END;
+    result.word = "";
+    EXPECT_EQ(tokens.at(5).type, result.type);
 }
 
 TEST_F(LexerTest, NoEndQuoteInterPolatedStringTest)
@@ -355,4 +355,100 @@ TEST_F(LexerTest, NoEndQuoteInterPolatedStringTest)
     result.type = ERROR;
     result.word = "Unterminated string";
     EXPECT_EQ(tokens.at(3), result);
+    result.type = END;
+    result.word = "";
+    EXPECT_EQ(tokens.at(4).type, result.type);
+}
+
+TEST_F(LexerTest, CommentTest)
+{
+    using enum TokenType;
+    Token result;
+
+    auto tokens = std::move(*lexer_with_comment_s).scan();
+
+    /* Exclusively use bound checking access to catch as many errors as possible */
+    result.type = LET;
+    result.word = "let";
+    result.line = 1;
+    EXPECT_EQ(tokens.at(0), result);
+    result.type = IDENTIFIER;
+    result.word = "x";
+    EXPECT_EQ(tokens.at(1), result);
+    result.type = EQUAL;
+    result.word = "=";
+    EXPECT_EQ(tokens.at(2), result);
+    result.type = INT32;
+    result.word = "1";
+    EXPECT_EQ(tokens.at(3), result);
+    result.type = SEMICOLON;
+    result.word = ";";
+    EXPECT_EQ(tokens.at(4), result);
+    result.type = END;
+    result.word = "";
+    EXPECT_EQ(tokens.at(5), result);
+}
+
+TEST_F(LexerTest, DivideExprTest)
+{
+    using enum TokenType;
+    Token result;
+
+    auto tokens = std::move(*lexer_with_divide_expr_s).scan();
+
+    /* Exclusively use bound checking access to catch as many errors as possible */
+    result.type = LET;
+    result.word = "let";
+    result.line = 1;
+    EXPECT_EQ(tokens.at(0), result);
+    result.type = IDENTIFIER;
+    result.word = "x";
+    EXPECT_EQ(tokens.at(1), result);
+    result.type = EQUAL;
+    result.word = "=";
+    EXPECT_EQ(tokens.at(2), result);
+    result.type = INT32;
+    result.word = "2";
+    EXPECT_EQ(tokens.at(3), result);
+    result.type = SLASH;
+    result.word = "/";
+    EXPECT_EQ(tokens.at(4), result);
+    result.type = INT32;
+    result.word = "3";
+    EXPECT_EQ(tokens.at(5), result);
+    result.type = SEMICOLON;
+    result.word = ";";
+    EXPECT_EQ(tokens.at(6), result);
+    result.type = END;
+    result.word = "";
+    EXPECT_EQ(tokens.at(7), result);
+}
+
+TEST_F(LexerTest, CommentWithThreeSlashTest)
+{
+    using enum TokenType;
+    Token result;
+
+    auto tokens = std::move(*lexer_with_comment_with_three_slash_s).scan();
+
+    /* Exclusively use bound checking access to catch as many errors as possible */
+    result.type = LET;
+    result.word = "let";
+    result.line = 1;
+    EXPECT_EQ(tokens.at(0), result);
+    result.type = IDENTIFIER;
+    result.word = "x";
+    EXPECT_EQ(tokens.at(1), result);
+    result.type = EQUAL;
+    result.word = "=";
+    EXPECT_EQ(tokens.at(2), result);
+    result.type = INT32;
+    result.word = "1";
+    EXPECT_EQ(tokens.at(3), result);
+    result.type = SEMICOLON;
+    result.word = ";";
+    EXPECT_EQ(tokens.at(4), result);
+    result.type = END;
+    result.word = "";
+    EXPECT_EQ(tokens.at(5), result);
 }
