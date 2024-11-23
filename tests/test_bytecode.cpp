@@ -1,7 +1,7 @@
 #include "bytecode.hpp"
 #include "gtest/gtest.h"
 
-struct ByteCodeTest : testing::Test {
+struct ByteCodeTest : ::testing::Test {
 protected:
     ByteCodeTest()
     {
