@@ -1,21 +1,27 @@
 #pragma once
 #include <string_view>
-#include <cstddef>
+#include <cstdint>
 
-enum class TokenType {
+enum class TokenType : uint8_t {
     LEFT_PAREN,
     RIGHT_PAREN,
     LEFT_BRACE,
     RIGHT_BRACE,
     COMMA,
-    DOT,
-    MINUS,
-    PLUS,
     SEMICOLON,
-    SLASH,
-    STAR,
+    COLON,
     INTRPL,   // string interpolation "My name is ${name}"
 
+    // operator
+    PLUS,
+    MINUS,
+    STAR,
+    SLASH,
+    PERCENT,
+    AS,
+    DOT,
+
+    // logical ops
     BANG,
     BANG_EQUAL,
     EQUAL,
@@ -24,14 +30,26 @@ enum class TokenType {
     GREATER_EQUAL,
     LESS,
     LESS_EQUAL,
+    AND,
+    OR,
+
+    // types
+    CHAR,
+    INT8,
+    INT16,
+    INT32,
+    INT64,
+    UINT8,
+    UINT16,
+    UINT32,
+    UINT64,
+    FLOAT32,
+    FLOAT64,
+    BOOL,
+    STRING,
 
     IDENTIFIER,
-    STRING,
-    NUMBER,
-    INT,
-    FLOAT,
 
-    AND,
     CLASS,
     ELSE,
     FALSE,
@@ -40,15 +58,14 @@ enum class TokenType {
     IF,
     LET,
     NIL,
-    OR,
-    PRINT,
+    LOG,
     RETURN,
     SUPER,
     THIS,
     TRUE,
     WHILE,
 
-    ERROR,
+    ERROR,   // extra error token which we use in parser to catch errors while lexing
     END,
 };
 
