@@ -1,27 +1,32 @@
+#include "lexer.hpp"
+#include "parser.hpp"
+#include "compiler.hpp"
+#include "logger.hpp"
 #include "vm.hpp"
-#include "debugger.hpp"
+
 #include <iostream>
+#include <print>
 
-int main()
+auto main(int argc, char** argv) -> int
 {
-    ByteCode bc;
-    // bc.write_byte(Opcode::RETURN, 0);
-    // bc.write_byte(Opcode::LOAD, 1);
-    bc.write_byte(0, 1);
-    bc.write_byte(0, 1);
-    bc.write_byte(0b1000, 2);
-    bc.write_byte(0b1001, 2);
-    bc.write_byte(0b1100, 2);
+    Lexer lexer = Lexer(R"(log(1 < 2);)");
 
-    bc.read_line_number(0);
-    bc.read_line_number(1);
-    bc.read_line_number(2);
-    bc.read_line_number(3);
-    bc.read_line_number(4);
+    Parser parser { std::move(lexer).scan() };
 
-    VM vm { bc };
+    auto ast = std::move(parser).parse();
+    if (!ast.has_value()) {
+        std::println("Could not parse the program!");
+        return 1;
+    }
 
-    Debugger dbg;
-    dbg.set_vm(vm);
-    dbg.disassemble_byte_code(std::cout, true);
+    std::println("{}", std::visit(util::ast::to_string, ast.value()));
+
+    Compiler compiler { std::move(ast.value()) };
+
+    auto code_segment = std::move(compiler).compile();
+
+    Logger::log(code_segment);
+
+    VM vm { code_segment };
+    vm.execute();
 }

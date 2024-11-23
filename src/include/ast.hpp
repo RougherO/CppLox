@@ -130,6 +130,7 @@ namespace ast {
         {
             std::string left  = std::visit(self, expr->left);
             std::string right = std::visit(self, expr->right);
+            // knowingly performing object slicing here
             return std::format("[{}]\v>{} {}", static_cast<BinaryExprToStrVisitor<Expression>>(self).op, std::move(left), std::move(right));
         }
 
@@ -138,6 +139,7 @@ namespace ast {
         auto UnaryExprToStrVisitor<Expression>::operator()(this Derived const& self, std::unique_ptr<Expression> const& expr) -> std::string
         {
             std::string right = std::visit(self, expr->right);
+            // knowingly performing object slicing here
             return std::format("[{}]\v>{}", static_cast<UnaryExprToStrVisitor<Expression>>(self).op, std::move(right));
         }
 
