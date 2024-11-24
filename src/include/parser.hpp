@@ -71,7 +71,7 @@ private:
     // consume current character and advance
     // if encountering an error token then keep consuming all error tokens
     void m_advance();
-    // auto m_match(TokenType type) -> bool;
+    auto m_match(TokenType type) -> bool;
     void m_match(TokenType type, std::string_view err_msg);
     // we report maximum errors in the parsing phase itself
     void m_report(std::vector<Token>::const_iterator token, std::string_view err_msg);

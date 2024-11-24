@@ -3,8 +3,8 @@
     statement   -> exprStmt | forStmt | ifStmt | logStmt | returnStmt | whileStmt | block
  */
 
-#ifndef NDEBUG
 #include <iostream>
+#ifndef NDEBUG
 #include <print>
 #endif
 #include <format>
@@ -73,19 +73,16 @@ Parser::Parser(std::vector<Token> tokens)
 
 void Parser::m_declaration()
 {
-    while (m_curr->type != TokenType::END) {
-        m_advance();   // consume current token
+    while (!m_match(TokenType::END)) {
         m_statement();
     }
 }
 
 void Parser::m_statement()
 {
-    switch (m_prev->type) {
-        using enum TokenType;
-        case LOG:
-            m_log_statement();
-            break;
+    using enum TokenType;
+    if (m_match(LOG)) {
+        m_log_statement();
     }
 }
 
@@ -342,8 +339,8 @@ void Parser::m_literal()
                 std::move(m_expr),
             });
 
-            m_match(TokenType::RIGHT_BRACE, "Expect '}' after interpolation");
-            m_advance();
+            // m_match(TokenType::RIGHT_BRACE, "Expect '}' after interpolation");
+            m_advance();   // consume closing braces
 
             // right string
             line = m_prev->line;
@@ -377,6 +374,16 @@ void Parser::m_advance()
             ++m_curr;
         }
     }
+}
+
+auto Parser::m_match(TokenType type) -> bool
+{
+    if (type == m_curr->type) {
+        m_advance();
+        return true;
+    }
+
+    return false;
 }
 
 void Parser::m_match(TokenType type, std::string_view err_msg)

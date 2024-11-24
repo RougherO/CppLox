@@ -137,6 +137,10 @@ void Lexer::m_create_intrpltok()
     while (!m_is_end() && m_tokens.back().type != TokenType::RIGHT_BRACE) {
         m_tokens.emplace_back(scan_token());
     }
+
+    if (m_tokens.back().type != TokenType::RIGHT_BRACE) {
+        m_tokens.emplace_back(m_create_errtok("Expected closing braces '}'"));
+    }
 }
 
 auto Lexer::m_create_numtok() noexcept -> Token

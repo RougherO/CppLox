@@ -20,8 +20,8 @@ protected:
                                                    "8";
     std::string_view float_s                     = "1.0 2.0 3.0\n"
                                                    "1.333 4.56 8.89";
-    std::string_view string_s                    = "\"Sample string\" \"Sample string part two\" \n"
-                                                   "\"Sample string part 3\" \"Non terminating string test";
+    std::string_view string_s                    = R"("Sample string" "Sample string part two")"
+                                                   R"("Sample string part 3" "Non terminating string test)";
     std::string_view keyword_s                   = " and "
                                                    " class "
                                                    " else "
@@ -31,14 +31,14 @@ protected:
                                                    " let "
                                                    " nil "
                                                    " or "
-                                                   " print "
+                                                   " log "
                                                    " return "
                                                    " super "
                                                    " this "
                                                    " true "
                                                    " while "
                                                    " keyword ";
-    std::string_view single_quote_s              = R"(")";
+    std::string_view single_quote_s              = R"( " )";
     std::string_view interpolated_s              = R"( "Initial msg ${Hello + 1}" )";
     std::string_view nested_interpolated_s       = R"( "${Hello "${1 + 2}" - 3}" )";
     std::string_view no_end_brace_interpolated_s = R"( "${Hello" )";
@@ -134,13 +134,12 @@ TEST_F(LexerTest, StringLexTest)
     Token result;
     result.type = STRING;
 
-    result.word = "\"Sample string\"";
+    result.word = "Sample string";
     result.line = 1;
     EXPECT_EQ(lexer_with_string->scan_token(), result);
-    result.word = "\"Sample string part two\"";
+    result.word = "Sample string part two";
     EXPECT_EQ(lexer_with_string->scan_token(), result);
-    result.word = "\"Sample string part 3\"";
-    result.line = 2;
+    result.word = "Sample string part 3";
     EXPECT_EQ(lexer_with_string->scan_token(), result);
     result.type = ERROR;
     result.word = "Unterminated string";
@@ -232,7 +231,7 @@ TEST_F(LexerTest, StringInterPolationTest)
 
     /* Exclusively use bound checking access to catch as many errors as possible */
     result.type = INTRPL;
-    result.word = "\"Initial msg ";
+    result.word = "Initial msg ";
     result.line = 1;
     EXPECT_EQ(tokens.at(0), result);
     result.type = IDENTIFIER;
@@ -248,10 +247,9 @@ TEST_F(LexerTest, StringInterPolationTest)
     result.word = "}";
     EXPECT_EQ(tokens.at(4), result);
     result.type = STRING;
-    result.word = "\"";
+    result.word = "";
     EXPECT_EQ(tokens.at(5), result);
     result.type = END;
-    result.word = "";
     EXPECT_EQ(tokens.at(6).type, result.type);
 }
 
@@ -264,14 +262,14 @@ TEST_F(LexerTest, NestedStringInterPolationTest)
 
     /* Exclusively use bound checking access to catch as many errors as possible */
     result.type = INTRPL;
-    result.word = "\"";
+    result.word = "";
     result.line = 1;
     EXPECT_EQ(tokens.at(0), result);
     result.type = IDENTIFIER;
     result.word = "Hello";
     EXPECT_EQ(tokens.at(1), result);
     result.type = INTRPL;
-    result.word = "\"";
+    result.word = "";
     EXPECT_EQ(tokens.at(2), result);
     result.type = INT32;
     result.word = "1";
@@ -286,7 +284,7 @@ TEST_F(LexerTest, NestedStringInterPolationTest)
     result.word = "}";
     EXPECT_EQ(tokens.at(6), result);
     result.type = STRING;
-    result.word = "\"";
+    result.word = "";
     EXPECT_EQ(tokens.at(7), result);
     result.type = MINUS;
     result.word = "-";
@@ -298,10 +296,9 @@ TEST_F(LexerTest, NestedStringInterPolationTest)
     result.word = "}";
     EXPECT_EQ(tokens.at(10), result);
     result.type = STRING;
-    result.word = "\"";
+    result.word = "";
     EXPECT_EQ(tokens.at(11), result);
     result.type = END;
-    result.word = "";
     EXPECT_EQ(tokens.at(12).type, result.type);
 }
 
@@ -314,7 +311,7 @@ TEST_F(LexerTest, NoEndBraceInterPolatedStringTest)
 
     /* Exclusively use bound checking access to catch as many errors as possible */
     result.type = INTRPL;
-    result.word = "\"";
+    result.word = "";
     result.line = 1;
     EXPECT_EQ(tokens.at(0), result);
     result.type = IDENTIFIER;
@@ -331,7 +328,7 @@ TEST_F(LexerTest, NoEndBraceInterPolatedStringTest)
     EXPECT_EQ(tokens.at(4), result);
     result.type = END;
     result.word = "";
-    EXPECT_EQ(tokens.at(5).type, result.type);
+    EXPECT_EQ(tokens.at(5), result);
 }
 
 TEST_F(LexerTest, NoEndQuoteInterPolatedStringTest)
@@ -343,7 +340,7 @@ TEST_F(LexerTest, NoEndQuoteInterPolatedStringTest)
 
     /* Exclusively use bound checking access to catch as many errors as possible */
     result.type = INTRPL;
-    result.word = "\"";
+    result.word = "";
     result.line = 1;
     EXPECT_EQ(tokens.at(0), result);
     result.type = IDENTIFIER;
