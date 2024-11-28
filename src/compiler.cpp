@@ -33,14 +33,14 @@ auto Compiler::compile() && -> std::pair<ByteCode, std::unordered_set<std::strin
         BinaryExprOpcodeVisitor<Compare<Order::LESS>, Opcode::CMP> {},
         BinaryExprOpcodeVisitor<Compare<Order::EQUAL>, Opcode::CMPE> {},
         BinaryExprOpcodeVisitor<Compare<Order::GREATER>, Opcode::CMP> {},
-        UnaryExprOpcodeVisitor<Negate, Opcode::NEGATE> {},
+        UnaryExprOpcodeVisitor<Negate, Opcode::NEG> {},
         UnaryExprOpcodeVisitor<Not, Opcode::NOT> {},
         [this](std::unique_ptr<Literal> const& expr) { m_add_constant(expr); },                                  // for literal expression we simply pass the hardwork on to m_add_constant
         [this](Opcode opcode, std::size_t line_nr) { m_emit_bytes({ std::to_underlying(opcode) }, line_nr); },   // adding an opcode overload to simply call the visitor and emit an opcode after visiting all child nodes
     };
 
     std::visit(opcode_emitter, m_ast);
-    m_emit_bytes({ std::to_underlying(Opcode::RETURN) }, m_bc.lines().rbegin()->second);   // use the last byte's line number as return code's line number
+    m_emit_bytes({ std::to_underlying(Opcode::RET) }, m_bc.lines().rbegin()->second);   // use the last byte's line number as return code's line number
 
     return std::pair { std::move(m_bc), std::move(m_pool) };
 }

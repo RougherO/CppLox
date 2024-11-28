@@ -38,7 +38,7 @@ void VM::execute_next()
                        val1);
             m_iptr++;
         } break;
-        case Opcode::RETURN:
+        case Opcode::RET:
             std::exit(0);
             break;
         case Opcode::LOAD: {
@@ -223,7 +223,7 @@ void VM::execute_next()
                        val1, val2);
             m_iptr++;
         } break;
-        case Opcode::NEGATE: {
+        case Opcode::NEG: {
             auto val1 = m_stack.pop();
             std::visit(util::Visitor {
                            [this]<Arithmetic T>(T v1) {

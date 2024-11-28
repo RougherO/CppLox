@@ -10,17 +10,17 @@
 
 enum class Opcode : uint8_t {
     LOG,
+    RET,   // return
     ADD,
     SUB,
     MUL,
     DIV,
-    MOD,
-    CMP,
-    CMPE,
+    MOD,    // modulus
+    CMP,    // compare
+    CMPE,   // compare equal
     LOAD,
-    NEGATE,
-    NOT,
-    RETURN,
+    NEG,    // negate
+    NOT,    // logical not
 };
 
 namespace util::opcode {
@@ -36,9 +36,9 @@ auto to_string(Opcode opcode) -> std::string_view
         case CMP: return "CMP";
         case CMPE: return "CMPE";
         case LOAD: return "LOAD";
-        case NEGATE: return "NEGATE";
+        case NEG: return "NEG";
         case NOT: return "NOT";
-        case RETURN: return "RETURN";
+        case RET: return "RET";
         case LOG: return "LOG";
     }
 #ifndef NDEBUG

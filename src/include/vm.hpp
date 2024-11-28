@@ -14,24 +14,31 @@ public:
 
     [[nodiscard]] auto top() const noexcept -> value_type
     {
-        return m_stack[m_sptr - 1];
+        return *std::prev(m_sptr);
     }
 
     auto push(value_type value) noexcept -> std::size_t
     {
-        m_stack[m_sptr] = value;
-        return m_sptr++;
+        *m_sptr         = value;
+        std::size_t pos = std::distance(m_stack.begin(), m_sptr);
+        m_sptr++;
+        return pos;
     }
 
     auto pop() noexcept -> value_type
     {
-        return m_stack[--m_sptr];
+        return *--m_sptr;
+    }
+
+    void pop_noop() noexcept
+    {
+        --m_sptr;
     }
 
 private:
-    static constexpr uint16_t max_size = 8'192;
-    std::size_t m_sptr {};
-    std::array<value_type, max_size> m_stack {};
+    static constexpr uint16_t max_size = 8 * 1'024;
+    std::array<value_type, max_size> m_stack {};   // 8K elements of 8B size => 8 * 8KB stack
+    std::array<value_type, max_size>::iterator m_sptr {};
 };
 
 class VM {

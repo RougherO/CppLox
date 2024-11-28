@@ -27,13 +27,13 @@ void Logger::log(CodeSegment const& code_pair)
             switch (opcode) {
                 using enum Opcode;
                 case LOG:
-                case RETURN:
+                case RET:
                 case ADD:
                 case SUB:
                 case MUL:
                 case DIV:
                 case MOD:
-                case NEGATE:
+                case NEG:
                 case NOT:
                 case CMP:
                 case CMPE:
