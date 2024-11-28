@@ -5,21 +5,22 @@
             "name": "default",
             "displayName": "Default",
             "binaryDir": "${sourceDir}/build/",
-            "cacheVariables": {}
+            "cacheVariables": {},
+            "generator": "Ninja Multi-Config"
         }
     ],
     "buildPresets": [
         {
             "name": "debug",
-            "configuration": "Debug",
+            "displayName": "Debug",
             "configurePreset": "default",
-            "displayName": "Debug"
+            "configuration": "Debug"
         },
         {
             "name": "release",
-            "configuration": "Release",
+            "displayName": "Release",
             "configurePreset": "default",
-            "displayName": "Release"
+            "configuration": "Release"
         }
     ],
     "testPresets": [
@@ -33,55 +34,27 @@
         },
         {
             "name": "debug",
-            "configuration": "Debug",
-            "configurePreset": "default",
             "displayName": "Debug",
+            "configurePreset": "default",
             "inherits": [
                 "default"
-            ]
+            ],
+            "configuration": "Debug"
         },
         {
             "name": "release",
-            "configuration": "Release",
-            "configurePreset": "default",
             "displayName": "Release",
+            "configurePreset": "default",
             "inherits": [
                 "default"
-            ]
+            ],
+            "configuration": "Release"
         }
     ],
     "workflowPresets": [
         {
-            "name": "debug",
-            "displayName": "Debug",
-            "steps": [
-                {
-                    "type": "configure",
-                    "name": "default"
-                },
-                {
-                    "type": "build",
-                    "name": "debug"
-                }
-            ]
-        },
-        {
-            "name": "release",
-            "displayName": "Release",
-            "steps": [
-                {
-                    "type": "configure",
-                    "name": "default"
-                },
-                {
-                    "type": "build",
-                    "name": "release"
-                }
-            ]
-        },
-        {
-            "name": "debug-test",
-            "displayName": "DebugTest",
+            "name": "debug-build-test",
+            "displayName": "Debug Build Test workflow for Multi-Config",
             "steps": [
                 {
                     "type": "configure",
@@ -98,8 +71,8 @@
             ]
         },
         {
-            "name": "release-test",
-            "displayName": "ReleaseTest",
+            "name": "multi-release-build-test",
+            "displayName": "Release Build Test workflow for Multi-Config",
             "steps": [
                 {
                     "type": "configure",
