@@ -3,14 +3,10 @@
     statement   -> exprStmt | forStmt | ifStmt | logStmt | returnStmt | whileStmt | block
  */
 
-#include <iostream>
-#ifndef NDEBUG
-#include <print>
-#endif
 #include <format>
-#include <charconv>
 #include <string_view>
 
+#include "static_report.hpp"
 #include "parser.hpp"
 
 Parser::Parser(std::vector<Token> tokens)
@@ -113,107 +109,43 @@ void Parser::m_binary()
 
     m_parse_precedence(entry.precedence);
 
-    auto left = std::move(m_stack.back());
-    m_stack.pop_back();
-
-    auto type_index = util::type::get_type(left);
-
-    if (type_index != util::type::get_type(m_expr)) {
-        m_report(op, "Expect expressions of same type");
-        return;
-    }
-
-    auto make_binary_expr = [this, op, &left, type_index]<typename ExprType>(ExprType, std::string_view c, TypeIndex new_type_index) {
-        switch (type_index) {
-            using enum TypeIndex;
-            case INT8:
-            case INT16:
-            case INT32:
-            case INT64:
-            case UINT8:
-            case UINT16:
-            case UINT32:
-            case UINT64:
-            case FLOAT32:
-            case FLOAT64:
-                m_expr = std::make_unique<ExprType>(Binary {
-                    Expr { .line = op->line, .type = new_type_index },
-                    std::move(left), std::move(m_expr)
-                });
-                break;
-            default:
-                m_report(m_prev, std::format("Cannot perform '{}' operation on value of type: {}",
-                                             c, util::type::to_string(type_index)));
-                return;
-        }
-    };
-
     switch (op->type) {
         using enum TokenType;
         case PLUS:
-            if (type_index == TypeIndex::STRING) {
-                m_expr = std::make_unique<Add>(Binary {
-                    Expr { .line = op->line, .type = TypeIndex::STRING },
-                    std::move(left), std::move(m_expr)
-                });
-            } else {
-                make_binary_expr(Add {}, "+", type_index);
-            }
+            m_make_binary_expression<Add>();
             break;
         case MINUS:
-            make_binary_expr(Subtract {}, "-", type_index);
+            m_make_binary_expression<Subtract>();
             break;
         case STAR:
-            make_binary_expr(Multiply {}, "*", type_index);
+            m_make_binary_expression<Multiply>();
             break;
         case SLASH:
-            make_binary_expr(Divide {}, "/", type_index);
+            m_make_binary_expression<Divide>();
             break;
         case PERCENT:
-            make_binary_expr(Modulus {}, "%", type_index);
+            m_make_binary_expression<Modulus>();
+            break;
         case LESS:
-            make_binary_expr(Compare<Order::LESS> {}, "<", TypeIndex::BOOL);
+            m_make_binary_expression<Compare<Order::LESS>>();
             break;
         case LESS_EQUAL:
-            make_binary_expr(Compare<Order::GREATER> {}, "<=", TypeIndex::BOOL);
-            m_expr = std::make_unique<Not>(Unary {
-                Expr { op->line, TypeIndex::BOOL },
-                std::move(m_expr),
-            });
+            m_make_binary_expression<Compare<Order::GREATER>>();
+            m_make_unary_expression<Not>();
             break;
         case GREATER:
-            make_binary_expr(Compare<Order::GREATER> {}, ">", TypeIndex::BOOL);
+            m_make_binary_expression<Compare<Order::GREATER>>();
             break;
         case GREATER_EQUAL:
-            make_binary_expr(Compare<Order::LESS> {}, ">=", TypeIndex::BOOL);
-            m_expr = std::make_unique<Not>(Unary {
-                Expr { op->line, TypeIndex::BOOL },
-                std::move(m_expr),
-            });
+            m_make_binary_expression<Compare<Order::LESS>>();
+            m_make_unary_expression<Not>();
             break;
         case EQUAL_EQUAL:
-            if (type_index == TypeIndex::BOOL) {
-                m_expr = std::make_unique<Compare<Order::EQUAL>>(Binary {
-                    Expr { .line = op->line, .type = TypeIndex::BOOL },
-                    std::move(left), std::move(m_expr)
-                });
-            } else {
-                make_binary_expr(Compare<Order::EQUAL> {}, "==", TypeIndex::BOOL);
-            }
+            m_make_binary_expression<Compare<Order::EQUAL>>();
             break;
         case BANG_EQUAL:
-            if (type_index == TypeIndex::BOOL) {
-                m_expr = std::make_unique<Compare<Order::EQUAL>>(Binary {
-                    Expr { .line = op->line, .type = TypeIndex::BOOL },
-                    std::move(left), std::move(m_expr)
-                });
-            } else {
-                make_binary_expr(Compare<Order::EQUAL> {}, "!=", TypeIndex::BOOL);
-            }
-            m_expr = std::make_unique<Not>(Unary {
-                Expr { op->line, TypeIndex::BOOL },
-                std::move(m_expr),
-            });
+            m_make_binary_expression<Compare<Order::EQUAL>>();
+            m_make_unary_expression<Not>();
             break;
         default:
 #ifndef NDEBUG
@@ -230,38 +162,12 @@ void Parser::m_unary()
 
     m_parse_precedence(Precedence::UNARY);
 
-    auto type_index = util::type::get_type(m_expr);
-
     switch (op->type) {
         case TokenType::MINUS:
-            switch (type_index) {
-                using enum TypeIndex;
-                case INT8:
-                case INT16:
-                case INT32:
-                case INT64:
-                case FLOAT32:
-                case FLOAT64:
-                    m_expr = std::make_unique<Negate>(Unary {
-                        Expr { .line = op->line, .type = type_index },
-                        std::move(m_expr)
-                    });
-                    break;
-                case UINT8:
-                case UINT16:
-                case UINT32:
-                case UINT64:
-                    m_report(op, "Cannot negate an unsigned type");
-                    return;
-                default:
-                    m_report(op, "Expect a numeric expression here");
-                    return;
-            }
+            m_make_unary_expression<Negate>();
+            break;
         case TokenType::BANG:
-            m_expr = std::make_unique<Not>(Unary {
-                Expr { .line = op->line, .type = TypeIndex::BOOL },
-                std::move(m_expr)
-            });
+            m_make_unary_expression<Not>();
             break;
         default:
 #ifndef NDEBUG
@@ -274,35 +180,7 @@ void Parser::m_unary()
 
 void Parser::m_number()
 {
-    // push the left sub-expression into the stack and make ast point to primary expression
-    m_stack.emplace_back(std::move(m_expr));
-
-    TokenType type = m_prev->type;
-
-    auto make_number = [this]<typename T>(T, TypeIndex type_index) {
-        T value {};
-        std::from_chars(m_prev->word.data(), m_prev->word.data() + m_prev->word.size(), value);
-        m_expr = std::make_unique<Literal>(Expr { .line = m_prev->line, .type = type_index }, value);
-    };
-    switch (type) {
-        using enum TokenType;
-        case INT8: make_number(int8_t {}, TypeIndex::INT8); break;
-        case INT16: make_number(int16_t {}, TypeIndex::INT16); break;
-        case INT32: make_number(int32_t {}, TypeIndex::INT32); break;
-        case INT64: make_number(int64_t {}, TypeIndex::INT64); break;
-        case UINT8: make_number(uint8_t {}, TypeIndex::UINT8); break;
-        case UINT16: make_number(uint16_t {}, TypeIndex::UINT16); break;
-        case UINT32: make_number(uint32_t {}, TypeIndex::UINT32); break;
-        case UINT64: make_number(uint64_t {}, TypeIndex::UINT64); break;
-        case FLOAT32: make_number(float {}, TypeIndex::FLOAT32); break;
-        case FLOAT64: make_number(double {}, TypeIndex::FLOAT64); break;
-        default:
-#ifndef NDEBUG
-            std::println(std::cerr, "[DEBUG] Unknown number types");
-#else
-            std::unreachable();
-#endif
-    }
+    m_make_literal_expression(m_prev->type);
 }
 
 void Parser::m_literal()
@@ -313,46 +191,24 @@ void Parser::m_literal()
     switch (m_prev->type) {
         using enum TokenType;
         case TRUE:
-            m_expr = std::make_unique<Literal>(Expr { .line = m_prev->line, .type = TypeIndex::BOOL }, true);
-            break;
         case FALSE:
-            m_expr = std::make_unique<Literal>(Expr { .line = m_prev->line, .type = TypeIndex::BOOL }, false);
-            break;
         case STRING:
-            m_expr = std::make_unique<Literal>(
-                Expr { .line = m_prev->line, .type = TypeIndex::STRING },
-                std::string { m_prev->word });
+            m_make_literal_expression(m_prev->type);
             break;
         case INTRPL: {
             // left string
-            std::size_t line = m_prev->line;
-            m_expr           = std::make_unique<Literal>(Expr { .line = line, .type = TypeIndex::STRING }, std::string { m_prev->word });
+            m_make_literal_expression(TokenType::STRING);
 
             // middle expression
             m_expression();
-
-            auto left = std::move(m_stack.back());
-            m_stack.pop_back();
-            m_expr = std::make_unique<Add>(Binary {
-                Expr { .line = line, .type = TypeIndex::STRING },
-                std::move(left),
-                std::move(m_expr),
-            });
+            m_make_binary_expression<Add>();   // add this with the left string
 
             // m_match(TokenType::RIGHT_BRACE, "Expect '}' after interpolation");
             m_advance();   // consume closing braces
 
             // right string
-            line = m_prev->line;
-            m_literal();   // consume the rest of the string
-
-            left = std::move(m_stack.back());
-            m_stack.pop_back();
-            m_expr = std::make_unique<Add>(Binary {
-                Expr { .line = line, .type = TypeIndex::STRING },
-                std::move(left),
-                std::move(m_expr)
-            });
+            m_literal();                       // consume the rest of the string
+            m_make_binary_expression<Add>();   // add the right string with the left + middle
         } break;
         default:
 #ifndef NDEBUG
@@ -396,22 +252,43 @@ void Parser::m_match(TokenType type, std::string_view err_msg)
     m_report(m_curr, err_msg);
 }
 
+template <typename Expression>
+void Parser::m_make_binary_expression()
+{
+    auto left = std::move(m_stack.back());
+    m_stack.pop_back();
+
+    m_expr = std::make_unique<Expression>(Binary {
+        Expr { .word = std::string { m_prev->word }, .line = m_prev->line },
+        std::move(left), std::move(m_expr)
+    });
+}
+
+template <typename Expression>
+void Parser::m_make_unary_expression()
+{
+    m_expr = std::make_unique<Expression>(Unary {
+        Expr { .word = std::string { m_prev->word }, .line = m_prev->line },
+        std::move(m_expr)
+    });
+}
+
+void Parser::m_make_literal_expression(TokenType type)
+{
+    // push the left sub-expression into the stack and make ast point to primary expression
+    m_stack.emplace_back(std::move(m_expr));
+
+    m_expr = std::make_unique<Literal>(
+        Expr { .word = std::string { m_prev->word }, .line = m_prev->line },
+        type);
+}
+
 void Parser::m_report(std::vector<Token>::const_iterator token, std::string_view err_msg)
 {
     m_is_parsed   = false;
     m_is_panicked = true;
 
-    std::cerr << std::format("[line: {}] error ", token->line);
-
-    if (token->type == TokenType::END) {
-        std::cerr << "at end: ";
-    } else if (token->type == TokenType::ERROR) {
-
-    } else {
-        std::cerr << std::format("at '{}': ", token->word);
-    }
-
-    std::cerr << err_msg << std::endl;   // explicitly flush each error
+    static_report::report(token, err_msg);
 }
 
 auto Parser::m_get_entry(TokenType type) const noexcept -> PrattEntry const&

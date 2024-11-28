@@ -19,6 +19,7 @@ struct from<R, List<Us...>> {
 
 // Order matters we use this order to infer types at runtime while compiling
 enum class TypeIndex : uint8_t {
+    NONE,
     BOOL,
     INT8,
     INT16,
@@ -33,7 +34,8 @@ enum class TypeIndex : uint8_t {
     STRING,
 };
 
-using TypeList = std::tuple<bool,
+using TypeList = std::tuple<std::monostate /* placeholder type for type inference */,
+                            bool,
                             int8_t, int16_t, int32_t, int64_t,
                             uint8_t, uint16_t, uint32_t, uint64_t,
                             float, double,
@@ -47,6 +49,7 @@ auto to_string(TypeIndex index) -> std::string_view
     switch (index) {
         using namespace std::string_view_literals;
         using enum TypeIndex;
+        case NONE: return "not inferred";
         case BOOL: return "bool";
         case INT8: return "i8";
         case INT16: return "i16";
@@ -59,12 +62,14 @@ auto to_string(TypeIndex index) -> std::string_view
         case FLOAT32: return "f32";
         case FLOAT64: return "f64";
         case STRING: return "str";
-    }
 #ifndef NDEBUG
-    std::println(std::cerr, "[DEBUG] Unknown type");
+            std::println(std::cerr, "[DEBUG] Unknown type");
+            return "Unknown";
 #else
-    std::unreachable();
+        default:
+            std::unreachable();
 #endif
+    }
 };
 
 auto get_type(TypeVariant const& type) noexcept -> TypeIndex   // used in vm when popping out pushed value from stack

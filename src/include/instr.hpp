@@ -40,11 +40,13 @@ auto to_string(Opcode opcode) -> std::string_view
         case NOT: return "NOT";
         case RET: return "RET";
         case LOG: return "LOG";
-    }
 #ifndef NDEBUG
-    std::println(std::cerr, "[DEBUG] Unknown opcode");
+            std::println(std::cerr, "[DEBUG] Unknown opcode");
+            return "UNKNOWN";
 #else
-    std::unreachable();
+        default:
+            std::unreachable();
 #endif
+    }
 }
 }

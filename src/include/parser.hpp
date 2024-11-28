@@ -73,7 +73,11 @@ private:
     void m_advance();
     auto m_match(TokenType type) -> bool;
     void m_match(TokenType type, std::string_view err_msg);
-    // we report maximum errors in the parsing phase itself
+    template <typename Expression>
+    void m_make_binary_expression();
+    template <typename Expression>
+    void m_make_unary_expression();
+    void m_make_literal_expression(TokenType type);
     void m_report(std::vector<Token>::const_iterator token, std::string_view err_msg);
     // get the table entry for the token `type` in the pratt table
     [[nodiscard]] auto m_get_entry(TokenType type) const noexcept -> PrattEntry const&;

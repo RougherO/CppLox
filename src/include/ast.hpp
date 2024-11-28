@@ -1,7 +1,8 @@
 #pragma once
 #include <memory>
-#include "types.hpp"
 #include "common.hpp"
+#include "tokens.hpp"
+#include "types.hpp"
 
 /* binary expr types */
 struct Add;
@@ -34,12 +35,13 @@ using ExprType = std::variant<std::unique_ptr<Add>,
                               std::unique_ptr<Literal>>;
 
 struct Expr {
-    std::size_t line;   // store line in source code
-    TypeIndex type;     // store the type information
+    std::string word;
+    std::size_t line;                     // store line in source code
+    TypeIndex type { TypeIndex::NONE };   // actual cpplox type
 };
 
 struct Literal : Expr {
-    TypeVariant value;
+    TokenType pseudo_type;   // temporary token type
 };
 
 struct Binary : Expr {
@@ -88,7 +90,7 @@ namespace literal {
         };
     }
 
-    inline constexpr Visitor to_string = std::apply([]<typename... Ts>(Ts...) { return Visitor { LiteralValueToStrVisitor<Ts> {}... }; }, TypeList {});
+    // inline constexpr Visitor to_string = std::apply([]<typename... Ts>(Ts...) { return Visitor { LiteralValueToStrVisitor<Ts> {}... }; }, TypeList {});
 }
 namespace ast {
     namespace {
@@ -100,20 +102,18 @@ namespace ast {
 
         template <typename Expression>
         struct BinaryExprToStrVisitor {
-            std::string_view op;
             template <typename Derived>
             auto operator()(this Derived const& self, std::unique_ptr<Expression> const& expr) -> std::string;
         };
 
         template <typename Expression>
         struct UnaryExprToStrVisitor {
-            std::string_view op;
             template <typename Derived>
             auto operator()(this Derived const& self, std::unique_ptr<Expression> const& expr) -> std::string;
         };
 
         struct LiteralExprToStrVisitor {
-            auto operator()(std::unique_ptr<Literal> const& expr) const -> std::string;
+            auto operator()(std::unique_ptr<Literal> const& expr) const -> std::string const&;
         };
 
         template <>
@@ -130,8 +130,7 @@ namespace ast {
         {
             std::string left  = std::visit(self, expr->left);
             std::string right = std::visit(self, expr->right);
-            // knowingly performing object slicing here
-            return std::format("[{}]\v>{} {}", static_cast<BinaryExprToStrVisitor<Expression>>(self).op, std::move(left), std::move(right));
+            return std::format("[{}]\v>{} {}", expr->word, std::move(left), std::move(right));
         }
 
         template <typename Expression>
@@ -139,41 +138,40 @@ namespace ast {
         auto UnaryExprToStrVisitor<Expression>::operator()(this Derived const& self, std::unique_ptr<Expression> const& expr) -> std::string
         {
             std::string right = std::visit(self, expr->right);
-            // knowingly performing object slicing here
-            return std::format("[{}]\v>{}", static_cast<UnaryExprToStrVisitor<Expression>>(self).op, std::move(right));
+            return std::format("[{}]\v>{}", expr->word, std::move(right));
         }
 
-        auto LiteralExprToStrVisitor::operator()(std::unique_ptr<Literal> const& expr) const -> std::string
+        auto LiteralExprToStrVisitor::operator()(std::unique_ptr<Literal> const& expr) const -> std::string const&
         {
-            return std::visit(literal::to_string, expr->value);
+            return expr->word;
         }
     }
 
     inline constexpr Visitor to_string {
         StmtToStrVisitor<Log> {},
-        BinaryExprToStrVisitor<Add> { .op = "+" },
-        BinaryExprToStrVisitor<Subtract> { .op = "-" },
-        BinaryExprToStrVisitor<Multiply> { .op = "*" },
-        BinaryExprToStrVisitor<Divide> { .op = "/" },
-        BinaryExprToStrVisitor<Modulus> { .op = "%" },
-        BinaryExprToStrVisitor<Compare<Order::LESS>> { .op = "<" },
-        BinaryExprToStrVisitor<Compare<Order::EQUAL>> { .op = "==" },
-        BinaryExprToStrVisitor<Compare<Order::GREATER>> { .op = ">" },
-        UnaryExprToStrVisitor<Negate> { .op = "-" },
-        UnaryExprToStrVisitor<Not> { .op = "!" },
+        BinaryExprToStrVisitor<Add> {},
+        BinaryExprToStrVisitor<Subtract> {},
+        BinaryExprToStrVisitor<Multiply> {},
+        BinaryExprToStrVisitor<Divide> {},
+        BinaryExprToStrVisitor<Modulus> {},
+        BinaryExprToStrVisitor<Compare<Order::LESS>> {},
+        BinaryExprToStrVisitor<Compare<Order::EQUAL>> {},
+        BinaryExprToStrVisitor<Compare<Order::GREATER>> {},
+        UnaryExprToStrVisitor<Negate> {},
+        UnaryExprToStrVisitor<Not> {},
         LiteralExprToStrVisitor {},
     };
 }
 namespace type {
-    auto get_type(ExprType const& expr_type) -> TypeIndex
-    {
-        return std::visit(util::Visitor {
-                              []<typename T>(std::unique_ptr<T> const& expr) { return expr->type; } },
-                          expr_type);
-    }
-    auto get_type(Expr const& expr) -> TypeIndex
-    {
-        return expr.type;
-    }
+    // auto get_type(ExprType const& expr_type) -> TypeIndex
+    // {
+    //     return std::visit(util::Visitor {
+    //                           []<typename T>(std::unique_ptr<T> const& expr) { return expr->type; } },
+    //                       expr_type);
+    // }
+    // auto get_type(Expr const& expr) -> TypeIndex
+    // {
+    //     return expr.type;
+    // }
 }
 }

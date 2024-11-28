@@ -2,10 +2,10 @@
 #include "parser.hpp"
 #include "compiler.hpp"
 #include "logger.hpp"
+#include "type_check.hpp"
 #include "vm.hpp"
 
-#include <iostream>
-#include <print>
+#include "static_report.hpp"
 
 auto main(int argc, char** argv) -> int
 {
@@ -15,7 +15,14 @@ auto main(int argc, char** argv) -> int
 
     auto ast = std::move(parser).parse();
     if (!ast.has_value()) {
-        std::println("Could not parse the program!");
+        static_report::report("Parsing", "Check for syntax errors");
+        return 1;
+    }
+
+    TypeChecker type_checker { std::move(ast.value()) };
+    ast = std::move(type_checker).check();
+    if (!ast.has_value()) {
+        static_report::report("Type checking", "Check for type correctnesss");
         return 1;
     }
 

@@ -22,6 +22,9 @@ auto Lexer::scan() && -> std::vector<Token>&&
         m_tokens.emplace_back(m_create_token(TokenType::END));
     }
 
+    auto& end_token = m_tokens.back();
+    end_token.word  = "end";   // helpful for error reporting
+
     return std::move(m_tokens);
 }
 
