@@ -42,7 +42,7 @@ auto to_string(Opcode opcode) -> std::string_view
         case LOG: return "LOG";
     }
 #ifndef NDEBUG
-    std::println(std::cerr, "Unknown opcode");
+    std::println(std::cerr, "[DEBUG] Unknown opcode");
 #else
     std::unreachable();
 #endif

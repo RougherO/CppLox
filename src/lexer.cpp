@@ -228,6 +228,7 @@ auto Lexer::m_create_idtok() noexcept -> Token
                     default: break;
                 }
             }
+            break;
         case 't':
             if (std::distance(m_start, m_curr) > 1) {
                 switch (*std::next(m_start)) {
@@ -301,6 +302,7 @@ void Lexer::m_skip_whitespace() noexcept
         switch (c) {
             case '\n':
                 m_line++;
+                [[fallthrough]];
             case ' ':
             case '\r':
             case '\t':
