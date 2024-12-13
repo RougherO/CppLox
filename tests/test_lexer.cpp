@@ -77,7 +77,7 @@ TEST_F(LexerTest, IntLexTest)
 {
     using enum TokenType;
     Token result;
-    result.type = INT32;
+    result.type = NUMBER;
 
     result.word = "1";
     result.line = 1;
@@ -107,7 +107,7 @@ TEST_F(LexerTest, FloatLexTest)
 {
     using enum TokenType;
     Token result;
-    result.type = FLOAT64;
+    result.type = NUMBER;
 
     result.word = "1.0";
     result.line = 1;
@@ -132,7 +132,7 @@ TEST_F(LexerTest, StringLexTest)
 {
     using enum TokenType;
     Token result;
-    result.type = STRING;
+    result.type = STRLIT;
 
     result.word = "Sample string";
     result.line = 1;
@@ -240,13 +240,13 @@ TEST_F(LexerTest, StringInterPolationTest)
     result.type = PLUS;
     result.word = "+";
     EXPECT_EQ(tokens.at(2), result);
-    result.type = INT32;
+    result.type = NUMBER;
     result.word = "1";
     EXPECT_EQ(tokens.at(3), result);
     result.type = RIGHT_BRACE;
     result.word = "}";
     EXPECT_EQ(tokens.at(4), result);
-    result.type = STRING;
+    result.type = STRLIT;
     result.word = "";
     EXPECT_EQ(tokens.at(5), result);
     result.type = END;
@@ -271,31 +271,31 @@ TEST_F(LexerTest, NestedStringInterPolationTest)
     result.type = INTRPL;
     result.word = "";
     EXPECT_EQ(tokens.at(2), result);
-    result.type = INT32;
+    result.type = NUMBER;
     result.word = "1";
     EXPECT_EQ(tokens.at(3), result);
     result.type = PLUS;
     result.word = "+";
     EXPECT_EQ(tokens.at(4), result);
-    result.type = INT32;
+    result.type = NUMBER;
     result.word = "2";
     EXPECT_EQ(tokens.at(5), result);
     result.type = RIGHT_BRACE;
     result.word = "}";
     EXPECT_EQ(tokens.at(6), result);
-    result.type = STRING;
+    result.type = STRLIT;
     result.word = "";
     EXPECT_EQ(tokens.at(7), result);
     result.type = MINUS;
     result.word = "-";
     EXPECT_EQ(tokens.at(8), result);
-    result.type = INT32;
+    result.type = NUMBER;
     result.word = "3";
     EXPECT_EQ(tokens.at(9), result);
     result.type = RIGHT_BRACE;
     result.word = "}";
     EXPECT_EQ(tokens.at(10), result);
-    result.type = STRING;
+    result.type = STRLIT;
     result.word = "";
     EXPECT_EQ(tokens.at(11), result);
     result.type = END;
@@ -375,7 +375,7 @@ TEST_F(LexerTest, CommentTest)
     result.type = EQUAL;
     result.word = "=";
     EXPECT_EQ(tokens.at(2), result);
-    result.type = INT32;
+    result.type = NUMBER;
     result.word = "1";
     EXPECT_EQ(tokens.at(3), result);
     result.type = SEMICOLON;
@@ -404,13 +404,13 @@ TEST_F(LexerTest, DivideExprTest)
     result.type = EQUAL;
     result.word = "=";
     EXPECT_EQ(tokens.at(2), result);
-    result.type = INT32;
+    result.type = NUMBER;
     result.word = "2";
     EXPECT_EQ(tokens.at(3), result);
     result.type = SLASH;
     result.word = "/";
     EXPECT_EQ(tokens.at(4), result);
-    result.type = INT32;
+    result.type = NUMBER;
     result.word = "3";
     EXPECT_EQ(tokens.at(5), result);
     result.type = SEMICOLON;
@@ -439,7 +439,7 @@ TEST_F(LexerTest, CommentWithThreeSlashTest)
     result.type = EQUAL;
     result.word = "=";
     EXPECT_EQ(tokens.at(2), result);
-    result.type = INT32;
+    result.type = NUMBER;
     result.word = "1";
     EXPECT_EQ(tokens.at(3), result);
     result.type = SEMICOLON;

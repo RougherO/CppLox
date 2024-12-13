@@ -9,9 +9,9 @@
 #include "tokens.hpp"
 
 namespace static_report {
-void report(std::string_view stage, std::string_view msg)
+void report(std::string_view msg)
 {
-    std::println(std::cerr, "[{} failed]: {}", stage, msg);
+    std::println(std::cerr, "{}", msg);
 }
 
 template <typename T>

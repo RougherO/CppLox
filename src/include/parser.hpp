@@ -7,7 +7,7 @@
 #include "tokens.hpp"
 
 // This was absolutely impossible for me to come up with.
-// More than 80% of the class definition is from craftinginterpreters
+// More than 70% of the class definition is from craftinginterpreters
 class Parser {
     // Precedence table for the parser
     enum class Precedence : uint8_t {
@@ -36,11 +36,11 @@ public:
     Parser(std::vector<Token> tokens);
 
     // optional return type: when no value is returned means parsing failed
-    auto parse() -> std::optional<StmtType>
+    [[nodiscard]] auto parse() -> std::optional<std::shared_ptr<Scope>>
     {
         m_declaration();
         if (m_is_parsed) {
-            return std::move(m_stmt);
+            return std::move(m_curr_scope);
         }
         return {};
     }
@@ -50,8 +50,12 @@ private:
     void m_declaration();
     // parent function for parsing all kinds of statements
     void m_statement();
+    // create block statements
+    void m_block_statement();
     // parse log statements
     void m_log_statement();
+    // parse variable declarations
+    void m_variable_declaration();
     // grouping -> ( expression )
     void m_grouping();
     // parent function for all kinds of expressions
@@ -68,6 +72,8 @@ private:
     // parse literal values - string, interpolations, true and false
     void m_literal();
 
+    // calm down the parser and start parsing again
+    void m_relax();
     // consume current character and advance
     // if encountering an error token then keep consuming all error tokens
     void m_advance();
@@ -77,7 +83,7 @@ private:
     void m_make_binary_expression();
     template <typename Expression>
     void m_make_unary_expression();
-    void m_make_literal_expression(TokenType type);
+    void m_make_literal_expression(TypeIndex type);
     void m_report(std::vector<Token>::const_iterator token, std::string_view err_msg);
     // get the table entry for the token `type` in the pratt table
     [[nodiscard]] auto m_get_entry(TokenType type) const noexcept -> PrattEntry const&;
@@ -89,6 +95,8 @@ private:
     std::vector<ExprType> m_stack;
     std::vector<Token>::const_iterator m_curr;
     std::vector<Token>::const_iterator m_prev;
+    // keeps track of the current scope
+    std::shared_ptr<Scope> m_curr_scope { std::make_shared<Scope>() };
     // holds all statement types
     StmtType m_stmt;
     // holds all expression types

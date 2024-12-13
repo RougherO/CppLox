@@ -36,41 +36,37 @@ Parser::Parser(std::vector<Token> tokens)
     m_table[std::to_underlying(TokenType::LESS)]          = { nullptr, &Parser::m_binary, Precedence::COMPARISON };
     m_table[std::to_underlying(TokenType::LESS_EQUAL)]    = { nullptr, &Parser::m_binary, Precedence::COMPARISON };
     m_table[std::to_underlying(TokenType::IDENTIFIER)]    = { nullptr, nullptr, Precedence::NONE };
-    m_table[std::to_underlying(TokenType::STRING)]        = { &Parser::m_literal, nullptr, Precedence::PRIMARY };
-    m_table[std::to_underlying(TokenType::INT8)]          = { &Parser::m_number, nullptr, Precedence::PRIMARY };
-    m_table[std::to_underlying(TokenType::INT16)]         = { &Parser::m_number, nullptr, Precedence::PRIMARY };
-    m_table[std::to_underlying(TokenType::INT64)]         = { &Parser::m_number, nullptr, Precedence::PRIMARY };
-    m_table[std::to_underlying(TokenType::INT32)]         = { &Parser::m_number, nullptr, Precedence::PRIMARY };
-    m_table[std::to_underlying(TokenType::UINT8)]         = { &Parser::m_number, nullptr, Precedence::PRIMARY };
-    m_table[std::to_underlying(TokenType::UINT16)]        = { &Parser::m_number, nullptr, Precedence::PRIMARY };
-    m_table[std::to_underlying(TokenType::UINT32)]        = { &Parser::m_number, nullptr, Precedence::PRIMARY };
-    m_table[std::to_underlying(TokenType::UINT64)]        = { &Parser::m_number, nullptr, Precedence::PRIMARY };
-    m_table[std::to_underlying(TokenType::FLOAT32)]       = { &Parser::m_number, nullptr, Precedence::PRIMARY };
-    m_table[std::to_underlying(TokenType::FLOAT64)]       = { &Parser::m_number, nullptr, Precedence::PRIMARY };
+    m_table[std::to_underlying(TokenType::STRLIT)]        = { &Parser::m_literal, nullptr, Precedence::PRIMARY };
+    m_table[std::to_underlying(TokenType::NUMBER)]        = { &Parser::m_number, nullptr, Precedence::PRIMARY };
     m_table[std::to_underlying(TokenType::AND)]           = { nullptr, nullptr, Precedence::NONE };
     m_table[std::to_underlying(TokenType::CLASS)]         = { nullptr, nullptr, Precedence::NONE };
     m_table[std::to_underlying(TokenType::ELSE)]          = { nullptr, nullptr, Precedence::NONE };
-    m_table[std::to_underlying(TokenType::FALSE)]         = { &Parser::m_literal, nullptr, Precedence::NONE };
     m_table[std::to_underlying(TokenType::FOR)]           = { nullptr, nullptr, Precedence::NONE };
     m_table[std::to_underlying(TokenType::FUN)]           = { nullptr, nullptr, Precedence::NONE };
     m_table[std::to_underlying(TokenType::IF)]            = { nullptr, nullptr, Precedence::NONE };
-    m_table[std::to_underlying(TokenType::NIL)]           = { &Parser::m_literal, nullptr, Precedence::NONE };
-    m_table[std::to_underlying(TokenType::OR)]            = { nullptr, nullptr, Precedence::NONE };
-    m_table[std::to_underlying(TokenType::LOG)]           = { nullptr, nullptr, Precedence::NONE };
-    m_table[std::to_underlying(TokenType::RETURN)]        = { nullptr, nullptr, Precedence::NONE };
-    m_table[std::to_underlying(TokenType::SUPER)]         = { nullptr, nullptr, Precedence::NONE };
-    m_table[std::to_underlying(TokenType::THIS)]          = { nullptr, nullptr, Precedence::NONE };
-    m_table[std::to_underlying(TokenType::TRUE)]          = { &Parser::m_literal, nullptr, Precedence::NONE };
-    m_table[std::to_underlying(TokenType::LET)]           = { nullptr, nullptr, Precedence::NONE };
-    m_table[std::to_underlying(TokenType::WHILE)]         = { nullptr, nullptr, Precedence::NONE };
-    m_table[std::to_underlying(TokenType::ERROR)]         = { nullptr, nullptr, Precedence::NONE };
-    m_table[std::to_underlying(TokenType::END)]           = { nullptr, nullptr, Precedence::NONE };
+    // m_table[std::to_underlying(TokenType::NIL)]           = { &Parser::m_literal, nullptr, Precedence::NONE };
+    m_table[std::to_underlying(TokenType::OR)]     = { nullptr, nullptr, Precedence::NONE };
+    m_table[std::to_underlying(TokenType::LOG)]    = { nullptr, nullptr, Precedence::NONE };
+    m_table[std::to_underlying(TokenType::RETURN)] = { nullptr, nullptr, Precedence::NONE };
+    m_table[std::to_underlying(TokenType::SUPER)]  = { nullptr, nullptr, Precedence::NONE };
+    m_table[std::to_underlying(TokenType::THIS)]   = { nullptr, nullptr, Precedence::NONE };
+    m_table[std::to_underlying(TokenType::TRUE)]   = { &Parser::m_literal, nullptr, Precedence::PRIMARY };
+    m_table[std::to_underlying(TokenType::FALSE)]  = { &Parser::m_literal, nullptr, Precedence::PRIMARY };
+    m_table[std::to_underlying(TokenType::LET)]    = { nullptr, nullptr, Precedence::NONE };
+    m_table[std::to_underlying(TokenType::WHILE)]  = { nullptr, nullptr, Precedence::NONE };
+    m_table[std::to_underlying(TokenType::ERROR)]  = { nullptr, nullptr, Precedence::NONE };
+    m_table[std::to_underlying(TokenType::END)]    = { nullptr, nullptr, Precedence::NONE };
 }
 
 void Parser::m_declaration()
 {
     while (!m_match(TokenType::END)) {
         m_statement();
+        m_curr_scope->statements.emplace_back(std::move(m_stmt));
+
+        if (m_is_panicked) {
+            m_relax();
+        }
     }
 }
 
@@ -79,7 +75,35 @@ void Parser::m_statement()
     using enum TokenType;
     if (m_match(LOG)) {
         m_log_statement();
+    } else if (m_match(LET)) {
+        m_variable_declaration();
+    } else if (m_match(LEFT_BRACE)) {
+        m_block_statement();
     }
+}
+
+void Parser::m_block_statement()
+{
+    std::size_t line = m_prev->line;
+
+    auto new_scope = std::make_shared<Scope>(Scope { .prev_scope = m_curr_scope });
+
+    new_scope->line = line;
+
+    auto curr_scope = std::move(m_curr_scope);   // store current scope
+    m_curr_scope    = std::move(new_scope);      // change curr scope to new scope
+
+    m_declaration();                             // and start parsing
+
+    new_scope    = std::move(m_curr_scope);      // then reset the new scope
+    m_curr_scope = std::move(curr_scope);        // and reset the current scope
+
+    if (!m_match(TokenType::RIGHT_BRACE)) {
+        m_report(m_curr, "Expect '}' after block");
+        return;
+    }
+
+    m_curr_scope->statements.emplace_back(std::move(new_scope));
 }
 
 void Parser::m_log_statement()
@@ -89,6 +113,48 @@ void Parser::m_log_statement()
     m_grouping();   // parse the expression inside log(...)
     m_match(TokenType::SEMICOLON, "Expect ';' after statement");
     m_stmt = std::make_unique<Log>(Stmt { .line = line }, std::move(m_expr));
+}
+
+void Parser::m_variable_declaration()
+{
+    std::size_t line = m_prev->line;
+
+    if (!m_match(TokenType::IDENTIFIER)) {
+        m_report(m_curr, "Expect identifier after 'let'");
+        return;
+    }
+
+    auto name = std::string { m_prev->word };
+
+    TypeIndex type { TypeIndex::NONE };
+    if (m_match(TokenType::COLON)) {
+        switch (m_prev->type) {
+            using enum TokenType;
+            case BOOL: type = TypeIndex::BOOL; break;
+            case INT8: type = TypeIndex::INT8; break;
+            case INT16: type = TypeIndex::INT16; break;
+            case INT32: type = TypeIndex::INT32; break;
+            case INT64: type = TypeIndex::INT64; break;
+            case UINT8: type = TypeIndex::UINT8; break;
+            case UINT16: type = TypeIndex::UINT16; break;
+            case UINT32: type = TypeIndex::UINT32; break;
+            case UINT64: type = TypeIndex::UINT64; break;
+            case FLOAT32: type = TypeIndex::FLOAT32; break;
+            case FLOAT64: type = TypeIndex::FLOAT64; break;
+            case STRING: type = TypeIndex::STRING; break;
+            default:;
+        }
+    }
+
+    if (!m_match(TokenType::EQUAL)) {
+        m_report(m_curr, "Expected equals operator");
+        return;
+    }
+
+    m_expression();
+
+    m_stmt = std::make_unique<VarDecl>(Stmt { .line = line }, std::move(name), std::move(m_expr),
+                                       m_curr_scope, type);
 }
 
 void Parser::m_grouping()
@@ -180,7 +246,26 @@ void Parser::m_unary()
 
 void Parser::m_number()
 {
-    m_make_literal_expression(m_prev->type);
+    // default type for all integers is int32 and for floating points float64
+    TypeIndex type { TypeIndex::INT32 };
+
+    switch (m_curr->type) {
+        // provide a type based on suffix type
+        using enum TokenType;
+        case INT8: type = TypeIndex::INT8; break;
+        case INT16: type = TypeIndex::INT16; break;
+        case INT32: type = TypeIndex::INT32; break;
+        case INT64: type = TypeIndex::INT64; break;
+        case UINT8: type = TypeIndex::UINT8; break;
+        case UINT16: type = TypeIndex::UINT16; break;
+        case UINT32: type = TypeIndex::UINT32; break;
+        case UINT64: type = TypeIndex::UINT64; break;
+        case FLOAT32: type = TypeIndex::FLOAT32; break;
+        case FLOAT64: type = TypeIndex::FLOAT64; break;
+        default:;
+    }
+
+    m_make_literal_expression(type);
 }
 
 void Parser::m_literal()
@@ -192,12 +277,14 @@ void Parser::m_literal()
         using enum TokenType;
         case TRUE:
         case FALSE:
-        case STRING:
-            m_make_literal_expression(m_prev->type);
+            m_make_literal_expression(TypeIndex::BOOL);
+            break;
+        case STRLIT:
+            m_make_literal_expression(TypeIndex::STRING);
             break;
         case INTRPL: {
             // left string
-            m_make_literal_expression(TokenType::STRING);
+            m_make_literal_expression(TypeIndex::STRING);
 
             // middle expression
             m_expression();
@@ -216,6 +303,31 @@ void Parser::m_literal()
 #else
             std::unreachable();
 #endif
+    }
+}
+
+void Parser::m_relax()
+{
+    m_is_panicked = false;
+
+    using enum TokenType;
+
+    while (!m_match(END)) {
+        if (m_prev->type == SEMICOLON) {
+            return;
+        }
+        switch (m_curr->type) {
+            case CLASS:
+            case FUN:
+            case LET:
+            case FOR:
+            case IF:
+            case WHILE:
+            case LOG:
+                return;
+            default:
+                m_advance();
+        }
     }
 }
 
@@ -273,14 +385,15 @@ void Parser::m_make_unary_expression()
     });
 }
 
-void Parser::m_make_literal_expression(TokenType type)
+void Parser::m_make_literal_expression(TypeIndex type)
 {
     // push the left sub-expression into the stack and make ast point to primary expression
     m_stack.emplace_back(std::move(m_expr));
 
     m_expr = std::make_unique<Literal>(
-        Expr { .word = std::string { m_prev->word }, .line = m_prev->line },
-        type);
+        Expr { .word = std::string { m_prev->word },
+               .line = m_prev->line,
+               .type = type });
 }
 
 void Parser::m_report(std::vector<Token>::const_iterator token, std::string_view err_msg)

@@ -126,7 +126,7 @@ auto Lexer::m_create_strtok() -> Token
         return m_create_errtok("Unterminated string");
     }
 
-    Token token = m_create_token(TokenType::STRING);
+    Token token = m_create_token(TokenType::STRLIT);
     m_advance();   // consume '"' character
     return token;
 }
@@ -148,19 +148,15 @@ void Lexer::m_create_intrpltok()
 
 auto Lexer::m_create_numtok() noexcept -> Token
 {
-    TokenType type { TokenType::INT32 };
+    TokenType type { TokenType::NUMBER };
 
     while (std::isdigit(m_peek())) {
         m_advance();
     }
+    // floating point numbers
     if (m_peek() == '.' && std::isdigit(m_peek_next())) {
-        type = TokenType::FLOAT64;
         m_advance();
         while (std::isdigit(m_peek())) {
-            m_advance();
-        }
-        if (m_peek() == 'f') {
-            type = TokenType::FLOAT32;
             m_advance();
         }
     }
@@ -190,8 +186,8 @@ auto Lexer::m_create_idtok() noexcept -> Token
         case 'f':
             if (std::distance(m_start, m_curr) > 1) {
                 switch (*std::next(m_start)) {
-                    case '3': return m_match_kwd(2, "oat", FLOAT32);
-                    case '6': return m_match_kwd(2, "oat", FLOAT64);
+                    case '3': return m_match_kwd(2, "2", FLOAT32);
+                    case '6': return m_match_kwd(2, "4", FLOAT64);
                     case 'a': return m_match_kwd(2, "lse", FALSE);
                     case 'o': return m_match_kwd(2, "r", FOR);
                     case 'u': return m_match_kwd(2, "n", FUN);

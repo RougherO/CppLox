@@ -48,6 +48,8 @@ enum class TokenType : uint8_t {
     BOOL,
     STRING,
 
+    NUMBER,   // represents integer number
+    STRLIT,   // represents any string literal
     IDENTIFIER,
 
     CLASS,

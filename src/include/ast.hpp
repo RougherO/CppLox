@@ -1,5 +1,10 @@
 #pragma once
 #include <memory>
+#include <ranges>
+#include <string_view>
+#include <unordered_map>
+#include <vector>
+
 #include "common.hpp"
 #include "tokens.hpp"
 #include "types.hpp"
@@ -36,12 +41,11 @@ using ExprType = std::variant<std::unique_ptr<Add>,
 
 struct Expr {
     std::string word;
-    std::size_t line;                     // store line in source code
-    TypeIndex type { TypeIndex::NONE };   // actual cpplox type
+    std::size_t line;   // store line in source code
+    TypeIndex type { TypeIndex::NONE };
 };
 
 struct Literal : Expr {
-    TokenType pseudo_type;   // temporary token type
 };
 
 struct Binary : Expr {
@@ -67,8 +71,12 @@ struct Not : Unary { };
 
 /* stmt types */
 struct Log;
+struct VarDecl;
+struct Scope;
 
-using StmtType = std::variant<std::unique_ptr<Log>>;
+using StmtType = std::variant<std::unique_ptr<Log>,
+                              std::unique_ptr<VarDecl>,
+                              std::shared_ptr<Scope>>;
 
 struct Stmt {
     std::size_t line;
@@ -76,6 +84,21 @@ struct Stmt {
 
 struct Log : Stmt {
     ExprType expr;
+};
+
+using SymbolTable = std::unordered_map<std::string_view, VarDecl const*>;   // SymbolTable doesn't own any value all ownership will belong to AST nodes
+
+struct Scope : Stmt {
+    std::vector<StmtType> statements;
+    SymbolTable table;   // every scope will have a reference to its symbol table
+    std::weak_ptr<Scope> prev_scope;
+};
+
+struct VarDecl : Stmt {
+    std::string name;
+    ExprType expr;
+    std::weak_ptr<Scope> curr_scope;
+    TypeIndex type { TypeIndex::NONE };
 };
 
 namespace util {
@@ -94,6 +117,10 @@ namespace literal {
 }
 namespace ast {
     namespace {
+        struct ScopeToStrVisitor {
+            template <typename Derived>
+            auto operator()(this Derived const& self, std::shared_ptr<Scope> const& stmt) -> std::string;
+        };
         template <typename Statement>
         struct StmtToStrVisitor {
             template <typename Derived>
@@ -115,6 +142,27 @@ namespace ast {
         struct LiteralExprToStrVisitor {
             auto operator()(std::unique_ptr<Literal> const& expr) const -> std::string const&;
         };
+
+        template <typename Derived>
+        auto ScopeToStrVisitor::operator()(this Derived const& self, std::shared_ptr<Scope> const& stmt) -> std::string
+        {
+            using namespace std::string_view_literals;
+
+            std::string statements = stmt->statements
+                                   | std::views::transform([&self](auto const& stmt) {
+                                         return std::visit(self, stmt);
+                                     })
+                                   | std::views::join_with("\n"sv);
+            return std::format("{{ {} }}", statements);
+        }
+
+        template <>
+        template <typename Derived>
+        auto StmtToStrVisitor<VarDecl>::operator()(this Derived const& self, std::unique_ptr<VarDecl> const& stmt) -> std::string
+        {
+            std::string expr = std::visit(self, stmt->expr);
+            return std::format("[[Let]]\v>{}: {} = {}", stmt->name, util::type::to_string(stmt->type), std::move(expr));
+        }
 
         template <>
         template <typename Derived>
@@ -148,6 +196,8 @@ namespace ast {
     }
 
     inline constexpr Visitor to_string {
+        ScopeToStrVisitor {},
+        StmtToStrVisitor<VarDecl> {},
         StmtToStrVisitor<Log> {},
         BinaryExprToStrVisitor<Add> {},
         BinaryExprToStrVisitor<Subtract> {},
